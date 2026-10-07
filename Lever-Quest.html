@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}</style>
+<title>Weavers Lever Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: game console — level strip, big drag-and-drop lever stage, then mission panel beside live turning-effect meters */
+:root{
+  --bg:#EEF2F7; --panel:#FFFFFF; --ink:#13233A; --muted:#55667D; --line:#D0D9E6;
+  --sky:#DCEBF8; --ground:#B9C7D8;
+  --accent:#F2B705; --on-accent:#13233A;
+  --effort:#D9481F; --load:#1F8A7E; --kid1:#7A4FD1; --kid2:#2F74D0; --good:#2E8B3D; --bad:#C2391B;
+  --soft-good:#DDF2E0; --soft-bad:#FBE3DA; --soft-accent:#FFF3C4;
+  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1622; --panel:#16212F; --ink:#E8EEF6; --muted:#9AA9BE; --line:#2A3A51;
+  --sky:#15243A; --ground:#2A3A51;
+  --accent:#F5C02A; --on-accent:#13233A;
+  --effort:#FF7A52; --load:#3CC4B4; --kid1:#A98BF0; --kid2:#6FA8F0; --good:#5CC56B; --bad:#FF7A52;
+  --soft-good:#173322; --soft-bad:#3A2219; --soft-accent:#3A3212;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1622; --panel:#16212F; --ink:#E8EEF6; --muted:#9AA9BE; --line:#2A3A51;
+  --sky:#15243A; --ground:#2A3A51;
+  --accent:#F5C02A; --on-accent:#13233A;
+  --effort:#FF7A52; --load:#3CC4B4; --kid1:#A98BF0; --kid2:#6FA8F0; --good:#5CC56B; --bad:#FF7A52;
+  --soft-good:#173322; --soft-bad:#3A2219; --soft-accent:#3A3212;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:22px 56px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(1.9rem,5.5vw,2.6rem);font-weight:700}
+h2{font-size:1.35rem;font-weight:600}
+p{margin:0;max-width:65ch}
+.eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+header .t{display:flex;flex-direction:column;gap:4px}
+.total{font-family:var(--display);font-size:1.15rem;font-weight:600}
+.levels{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.lv{flex:0 0 auto;border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;padding:6px 12px;font-family:var(--display);font-weight:600;display:flex;flex-direction:column;align-items:center;min-width:4.6rem;cursor:pointer}
+.lv .st{font-size:.8rem;letter-spacing:1px;color:var(--accent);min-height:1.1em}
+.lv[aria-current="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.stage{background:var(--sky);border:1px solid var(--line);border-radius:18px;overflow:hidden;position:relative}
+canvas{display:block;width:100%;height:auto;touch-action:none;cursor:grab}
+canvas.dragging{cursor:grabbing}
+.drag-tip{position:absolute;right:12px;bottom:10px;font-family:var(--display);font-weight:600;font-size:.95rem;background:var(--panel);color:var(--ink);padding:4px 10px;border-radius:999px;opacity:.92;pointer-events:none}
+.bottom{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.bottom{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.where{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.goal{background:var(--soft-accent);border-radius:10px;padding:10px 12px;font-weight:700}
+.nudge{display:flex;flex-wrap:wrap;gap:10px}
+.nudge .grp{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 10px;font-weight:700}
+.nb{width:2.2rem;height:2.2rem;border:none;border-radius:8px;background:var(--bg);color:var(--ink);font-weight:700;font-size:1rem;cursor:pointer}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+button{font:inherit}
+.btn{border:none;background:var(--accent);color:var(--on-accent);padding:11px 20px;border-radius:12px;font-family:var(--display);font-weight:600;font-size:1.1rem;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);font-size:1rem}
+.btn.go{background:var(--good);color:var(--panel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.msg{border-radius:10px;padding:10px 12px;min-height:3em}
+.msg.good{background:var(--soft-good);color:var(--good);font-weight:700}
+.msg.bad{background:var(--soft-bad);color:var(--bad);font-weight:700}
+.msg.info{background:var(--bg);color:var(--muted)}
+.learn{border-left:4px solid var(--good);padding-left:12px}
+.meters{display:flex;flex-direction:column;gap:12px}
+.meter{display:flex;flex-direction:column;gap:6px}
+.formula div{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.formula .tot{border-top:1px solid var(--line);margin-top:4px;padding-top:4px;font-weight:700}
+.verdict .cmp{display:block;font-family:var(--mono);font-size:1.05rem;margin-bottom:2px}
+.meter .lab{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
+.track{height:26px;background:var(--bg);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.fill{height:100%;transition:width .3s ease}
+.fill.l{background:var(--kid1)} .fill.r{background:var(--effort)}
+.verdict{font-family:var(--display);font-size:1.15rem;font-weight:600;text-align:center;padding:8px;border-radius:10px;background:var(--bg)}
+.toggle{display:flex;gap:8px;align-items:center;font-size:.95rem;color:var(--muted)}
+.toggle input{width:1.1rem;height:1.1rem;accent-color:var(--ink)}
+.ans{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ans input{font:inherit;font-family:var(--mono);width:6.5rem;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.formula{font-family:var(--mono);font-size:.9rem;background:var(--bg);border-radius:8px;padding:8px 10px;color:var(--ink)}
+footer{color:var(--muted);font-size:.88rem}
+/* ---------- learn view ---------- */
+.view{display:flex;flex-direction:column;gap:18px}
+.view[hidden],.lstep[hidden]{display:none!important}
+.switch{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.switch button{border:none;background:transparent;color:var(--ink);padding:8px 16px;border-radius:9px;font-family:var(--display);font-weight:600;font-size:1.05rem;cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.hright{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.steps-nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.sn{flex:1 0 auto;border:2px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;padding:6px 10px;font-weight:700;font-size:.92rem;display:flex;gap:8px;align-items:center;cursor:pointer}
+.sn .d{width:1.6rem;height:1.6rem;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-family:var(--mono);font-size:.8rem}
+.sn.seen .d{background:var(--soft-good);color:var(--good)}
+.sn[aria-current="true"]{border-color:var(--ink);color:var(--ink)}
+.sn[aria-current="true"] .d{background:var(--accent);color:var(--on-accent)}
+.lesson{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.lesson{grid-template-columns:1fr}}
+.figbox{background:var(--sky);border:1px solid var(--line);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.figbox svg{width:100%;height:auto;display:block}
+.say{font-size:1.1rem}
+.callout{border-radius:12px;padding:12px 14px;background:var(--soft-accent)}
+.callout.ok{background:var(--soft-good);color:var(--good);font-weight:700}
+.callout.no{background:var(--soft-bad);color:var(--bad);font-weight:700}
+.hot{cursor:pointer;outline:none}
+.hot .ring{fill:none;stroke:var(--accent);stroke-width:4;animation:ping 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.hot .core{fill:var(--accent);stroke:var(--ink);stroke-width:2}
+.hot:focus-visible .core{stroke-width:4}
+.hot.found .ring{display:none}
+.hot.found .core{fill:var(--good)}
+.tag-l{opacity:0;transition:opacity .4s}
+.tag-l.show{opacity:1}
+@keyframes ping{0%{opacity:1;transform:scale(.8)}100%{opacity:0;transform:scale(1.7)}}
+.flist{display:flex;flex-direction:column;gap:8px}
+.fitem{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--panel)}
+.fitem.locked{color:var(--muted);border-style:dashed}
+.fitem b{font-family:var(--display)}
+.big{font-family:var(--display);font-size:2.1rem;font-weight:700;line-height:1}
+.statrow{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat small{color:var(--muted);font-weight:700}
+.str{height:16px;background:var(--bg);border-radius:8px;overflow:hidden;border:1px solid var(--line);position:relative}
+.str .fillx{height:100%;background:var(--effort);transition:width .3s}
+.str .mark{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink)}
+.lctrl{display:flex;flex-direction:column;gap:4px}
+.lctrl label{font-weight:700;display:flex;justify-content:space-between}
+.lctrl input[type=range]{width:100%;height:28px;accent-color:var(--ink)}
+.spotrow{display:flex;gap:8px;flex-wrap:wrap}
+.spot{border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
+.spot.ok{border-color:var(--good);color:var(--good)} .spot.no{border-color:var(--bad);color:var(--bad)}
+.rulebox{border:2px solid var(--ink);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;background:var(--panel)}
+.rulebox .eq{font-family:var(--display);font-size:1.3rem;font-weight:700}
+.ctabs{display:flex;gap:8px;flex-wrap:wrap}
+.ctab{border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 14px;font-family:var(--display);font-weight:600;font-size:1.05rem;cursor:pointer}
+.ctab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.order{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tg{font-family:var(--mono);font-weight:700;font-size:.85rem;padding:4px 10px;border-radius:6px}
+.tg.E{background:var(--soft-bad);color:var(--effort)} .tg.L{background:var(--soft-good);color:var(--load)} .tg.F{background:var(--soft-accent);color:var(--ink)}
+.ex{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.lq{display:flex;flex-direction:column;gap:8px}
+.lq h3{font-size:1.08rem;font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
+.opt.right{border-color:var(--good);color:var(--good);background:var(--soft-good)}
+.opt.wrong{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.qfb{min-height:1.4em;color:var(--muted);font-size:.95rem}
+.lnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.startbig{font-size:1.3rem;padding:14px 26px}
+@media (prefers-reduced-motion:reduce){.hot .ring{animation:none}}
+
+
+/* compact play layout */
+.play{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.play{grid-template-columns:1fr}}
+.playmain{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.mtop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mcard p{font-size:.98rem}
+.mcard .goal{padding:7px 10px;font-size:.95rem}
+.ctrlbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.msg{min-height:0}
+.meterpanel{padding:14px;gap:10px}
+@media (min-width:821px){.meterpanel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px)}}
+.mhint{color:var(--muted);font-size:.88rem}
+.meterpanel h2{font-size:1.2rem}
+.track{height:20px}
+.levels .lv{padding:4px 10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="t">
+      <span class="eyebrow">Weavers EV Project · Forces and motion</span>
+      <h1>Lever Quest</h1>
+    </div>
+    <div class="hright">
+      <div class="switch" role="group" aria-label="Choose a page">
+        <button id="goLearn" aria-pressed="true">📖 Learn</button>
+        <button id="goPlay" aria-pressed="false">🎮 Play</button>
+      </div>
+      <div class="total">⭐ <span class="num" id="starTotal">0</span> / 21</div>
+    </div>
+  </header>
+
+<div class="view" id="learnView">
+  <nav class="steps-nav" id="stepsNav" aria-label="Lesson steps">
+    <button class="sn" data-s="0" id="sn0"><span class="d">1</span>Parts of a lever</button>
+    <button class="sn" data-s="1" id="sn1"><span class="d">2</span>Small push, big lift</button>
+    <button class="sn" data-s="2" id="sn2"><span class="d">3</span>The secret rule</button>
+    <button class="sn" data-s="3" id="sn3"><span class="d">4</span>Three kinds</button>
+    <button class="sn" data-s="4" id="sn4"><span class="d">5</span>Ready check</button>
+  </nav>
+
+  <!-- STEP 1: parts -->
+  <section class="lstep" id="ls0">
+    <div class="lesson">
+      <div class="figbox">
+        <svg viewBox="0 26 640 254" role="img" aria-label="A plank on a triangle. A rock on the left end, a hand pushing down on the right end.">
+          <line x1="20" y1="240" x2="620" y2="240" stroke="var(--ground)" stroke-width="6"/>
+          <polygon points="380,184 352,240 408,240" fill="var(--accent)" stroke="var(--ink)" stroke-width="2"/>
+          <rect x="60" y="172" width="540" height="13" rx="4" fill="var(--ink)"/>
+          <path d="M78,172 C70,130 100,100 140,104 C182,106 196,140 186,172 Z" fill="var(--load)"/>
+          <line x1="570" y1="64" x2="570" y2="150" stroke="var(--effort)" stroke-width="9" stroke-linecap="round"/>
+          <polygon points="556,148 584,148 570,168" fill="var(--effort)"/>
+          <text class="tag-l" id="tg-load" x="132" y="88" text-anchor="middle" font-family="var(--display)" font-weight="600" font-size="20" fill="var(--load)">LOAD</text>
+          <text class="tag-l" id="tg-bar" x="262" y="214" text-anchor="middle" font-family="var(--display)" font-weight="600" font-size="20" fill="var(--ink)">LEVER (bar)</text>
+          <text class="tag-l" id="tg-ful" x="380" y="268" text-anchor="middle" font-family="var(--display)" font-weight="600" font-size="20" fill="var(--ink)">FULCRUM</text>
+          <text class="tag-l" id="tg-eff" x="570" y="48" text-anchor="middle" font-family="var(--display)" font-weight="600" font-size="20" fill="var(--effort)">EFFORT</text>
+          <g class="hot" id="hs-load" data-k="load" tabindex="0" role="button" aria-label="Find part: the rock"><circle class="ring" cx="132" cy="140" r="16"/><circle class="core" cx="132" cy="140" r="11"/></g>
+          <g class="hot" id="hs-bar" data-k="bar" tabindex="0" role="button" aria-label="Find part: the plank"><circle class="ring" cx="262" cy="178" r="16"/><circle class="core" cx="262" cy="178" r="11"/></g>
+          <g class="hot" id="hs-ful" data-k="ful" tabindex="0" role="button" aria-label="Find part: the triangle"><circle class="ring" cx="380" cy="214" r="16"/><circle class="core" cx="380" cy="214" r="11"/></g>
+          <g class="hot" id="hs-eff" data-k="eff" tabindex="0" role="button" aria-label="Find part: the push"><circle class="ring" cx="570" cy="106" r="16"/><circle class="core" cx="570" cy="106" r="11"/></g>
+        </svg>
+      </div>
+      <div class="panel">
+        <h2>What is a lever?</h2>
+        <p class="say">A <b>lever</b> is a stiff bar that turns around a fixed point. It helps us move heavy things with a small push. People have used levers for thousands of years to lift rocks, build pyramids and open tins.</p>
+        <p><b>Tap the 4 glowing dots</b> to find the parts.</p>
+        <div class="flist" aria-live="polite">
+          <div class="fitem locked" id="fi-bar">🔒 Find part 1</div>
+          <div class="fitem locked" id="fi-ful">🔒 Find part 2</div>
+          <div class="fitem locked" id="fi-load">🔒 Find part 3</div>
+          <div class="fitem locked" id="fi-eff">🔒 Find part 4</div>
+        </div>
+        <div class="callout" id="partsDone">Found <span class="num" id="foundN">0</span> of 4.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: small push -->
+  <section class="lstep" id="ls1" hidden>
+    <div class="lesson">
+      <div class="figbox">
+        <svg viewBox="0 70 640 208" role="img" aria-label="A plank with the EV battery on the left end and your push on the right end. The fulcrum can move.">
+          <line x1="20" y1="232" x2="620" y2="232" stroke="var(--ground)" stroke-width="6"/>
+          <g id="b2beam" style="transition:transform .7s cubic-bezier(.3,1.3,.5,1)">
+            <rect x="44" y="178" width="552" height="12" rx="4" fill="var(--ink)"/>
+            <rect x="34" y="132" width="52" height="46" rx="7" fill="var(--load)"/>
+            <rect x="42" y="125" width="9" height="7" fill="var(--load)"/><rect x="69" y="125" width="9" height="7" fill="var(--load)"/>
+            <text x="60" y="114" text-anchor="middle" font-family="var(--display)" font-weight="600" font-size="16" fill="var(--load)">Battery 40 N</text>
+            <line x1="580" y1="100" x2="580" y2="160" stroke="var(--effort)" stroke-width="8" stroke-linecap="round"/>
+            <polygon points="567,158 593,158 580,176" fill="var(--effort)"/>
+            <text x="580" y="88" text-anchor="middle" font-family="var(--display)" font-weight="600" font-size="16" fill="var(--effort)">You</text>
+          </g>
+          <polygon id="b2ful" points="320,190 294,232 346,232" fill="var(--accent)" stroke="var(--ink)" stroke-width="2"/>
+          <g id="b2arms"></g>
+        </svg>
+        <div class="lctrl">
+          <label for="b2f" style="flex-direction:column;gap:2px">Move the fulcrum <span class="num" id="b2fv" style="font-weight:500;font-size:.85rem;color:var(--muted)"></span></label>
+          <input type="range" id="b2f" min="1" max="11" step="1" value="6">
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Small push, big lift</h2>
+        <p class="say">You are only strong enough to push with <b>20 N</b>. The EV battery weighs <b>40 N</b>. Can a lever help? Slide the fulcrum and watch the push you need.</p>
+        <div class="statrow">
+          <div class="stat"><small>Push needed</small><span class="big num" id="b2need"></span></div>
+          <div class="stat"><small>Your strength</small><span class="big num">20 N</span></div>
+        </div>
+        <div class="str" aria-hidden="true"><div class="fillx" id="b2bar"></div><div class="mark" id="b2mark"></div></div>
+        <button class="btn" id="b2push">Push down!</button>
+        <div class="callout" id="b2msg" aria-live="polite">Predict: where should the fulcrum go?</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: rule -->
+  <section class="lstep" id="ls2" hidden>
+    <div class="lesson">
+      <div class="figbox">
+        <svg viewBox="0 0 420 300" role="img" aria-label="A classroom door seen from above, with the hinge on the left and four push spots along the door.">
+          <rect x="0" y="40" width="58" height="22" fill="var(--muted)"/>
+          <rect x="336" y="40" width="84" height="22" fill="var(--muted)"/>
+          <text x="210" y="26" text-anchor="middle" font-family="var(--display)" font-size="15" fill="var(--muted)">corridor</text>
+          <text x="320" y="200" text-anchor="middle" font-family="var(--display)" font-size="15" fill="var(--muted)">classroom</text><text x="320" y="218" text-anchor="middle" font-family="var(--display)" font-size="13" fill="var(--muted)">(seen from above)</text>
+          <g id="door" style="transform-origin:66px 51px;transition:transform .8s cubic-bezier(.3,1.2,.5,1)">
+            <rect x="62" y="45" width="270" height="12" rx="3" fill="var(--load)"/>
+            <g id="spots"></g>
+            <g id="pushArrow"></g>
+          </g>
+          <circle cx="66" cy="51" r="10" fill="var(--accent)" stroke="var(--ink)" stroke-width="2"/>
+          <text x="54" y="88" text-anchor="end" font-family="var(--display)" font-weight="600" font-size="15" fill="var(--ink)">hinge</text>
+          <text x="54" y="106" text-anchor="end" font-family="var(--display)" font-size="13" fill="var(--muted)">= fulcrum</text>
+        </svg>
+        <div class="spotrow" id="spotBtns" aria-label="Choose where to push"></div>
+      </div>
+      <div class="panel">
+        <h2>The secret rule</h2>
+        <p class="say">A door is a lever too! The hinge is the fulcrum. This door is stiff: it needs a <b>turning effect of 30</b> to open. You push with <b>10 N</b>. Tap a spot to push there.</p>
+        <div class="callout" id="doorMsg" aria-live="polite">Which spot do you think will work?</div>
+        <div class="rulebox">
+          <span class="eq">Turning effect = force × distance</span>
+          <span>The distance is measured from the <b>fulcrum</b>. The same push turns things more when it is farther away.</span>
+          <span><b>Balanced:</b> both sides have the same turning effect, so nothing turns.<br><b>Unbalanced:</b> one side is bigger, so the lever turns that way.</span>
+        </div>
+        <p>That is why door handles are on the side <b>far from the hinges</b>, and why spanners have long handles.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4: classes -->
+  <section class="lstep" id="ls3" hidden>
+    <div class="lesson">
+      <div class="figbox">
+        <div class="ctabs" role="tablist">
+          <button class="ctab" role="tab" aria-selected="true" data-c="1" id="ct1">Class 1</button>
+          <button class="ctab" role="tab" aria-selected="false" data-c="2" id="ct2">Class 2</button>
+          <button class="ctab" role="tab" aria-selected="false" data-c="3" id="ct3">Class 3</button>
+        </div>
+        <svg viewBox="0 0 360 180" id="clsSvg" role="img" aria-label="Diagram of the selected lever class"></svg>
+      </div>
+      <div class="panel">
+        <h2>Three kinds of lever</h2>
+        <p class="say">Every lever has a fulcrum, a load and an effort. What changes is <b>which one is in the middle</b>.</p>
+        <div class="order" id="clsOrder"></div>
+        <p id="clsText"></p>
+        <p><b>Good at:</b> <span id="clsGood"></span></p>
+        <ul class="ex" id="clsEx"></ul>
+        <div class="callout">Memory trick: <b>F L E = 1 2 3</b>. Fulcrum in the middle → Class 1. Load in the middle → Class 2. Effort in the middle → Class 3.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5: ready check -->
+  <section class="lstep" id="ls4" hidden>
+    <div class="panel">
+      <h2>Ready check</h2>
+      <p>Answer these 4 questions. Then you are ready for Lever Quest!</p>
+      <div id="readyQs" style="display:flex;flex-direction:column;gap:16px"></div>
+      <div class="callout" id="readyScore" aria-live="polite">Answered 0 of 4.</div>
+      <div><button class="btn startbig" id="startQuest">Start Lever Quest 🎮</button></div>
+    </div>
+  </section>
+
+  <div class="lnav">
+    <button class="btn ghost" id="lBack">← Back</button>
+    <button class="btn" id="lNext">Next →</button>
+  </div>
+</div>
+
+
+<div class="view" id="gameView" hidden>
+  <nav class="levels" id="levels" aria-label="Levels"></nav>
+
+  <div class="play">
+    <div class="playmain">
+      <section class="mcard" aria-live="polite">
+        <div class="mtop"><h2 id="lvTitle"></h2><span class="where" id="where"></span></div>
+        <p id="lvStory"></p>
+        <div class="goal" id="lvGoal"></div>
+      </section>
+      <div class="stage">
+        <canvas id="cv" width="800" height="300" aria-label="Lever game stage. Drag the fulcrum and the objects along the plank."></canvas>
+        <span class="drag-tip" id="dragTip">Drag the glowing things ✋</span>
+      </div>
+      <div class="ctrlbar">
+        <div class="nudge" id="nudge" aria-label="Move things with buttons"></div>
+        <div class="actions">
+          <button class="btn" id="testBtn">Test it!</button>
+          <button class="btn ghost" id="resetBtn">Reset</button>
+          <button class="btn go" id="nextBtn" hidden>Next level →</button>
+        </div>
+      </div>
+      <div class="ans" id="ansBox" hidden></div>
+      <div class="msg info" id="msg">Predict first: what will happen? Then press Test it!</div>
+      <p class="learn" id="learn" hidden></p>
+    </div>
+
+    <aside class="panel meterpanel">
+      <h2>Turning-effect meter</h2>
+      <p class="mhint">Turning effect = force (N) × distance from the fulcrum (blocks)</p>
+      <div class="meters" id="meters">
+        <div class="meter">
+          <div class="lab"><span>Turns anticlockwise ↺</span><span class="num" id="mL">0</span></div>
+          <div class="track"><div class="fill l" id="fL"></div></div>
+          <div class="formula" id="fmL"></div>
+        </div>
+        <div class="meter">
+          <div class="lab"><span>Turns clockwise ↻</span><span class="num" id="mR">0</span></div>
+          <div class="track"><div class="fill r" id="fR"></div></div>
+          <div class="formula" id="fmR"></div>
+        </div>
+      </div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <label class="toggle"><input type="checkbox" id="expert"> Expert mode: hide the numbers</label>
+    </aside>
+  </div>
+  <footer>Stars: ⭐⭐⭐ solved on the first test, ⭐⭐ on the second, ⭐ after that. Links to Cambridge Primary Science Stage 6, Unit 4: weight in newtons, balanced and unbalanced forces, force diagrams.</footer>
+</div>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const mk=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e};
+
+/* ---------- views ---------- */
+function showView(v){
+  $('learnView').hidden=v!=='learn';$('gameView').hidden=v!=='play';
+  $('goLearn').setAttribute('aria-pressed',v==='learn');$('goPlay').setAttribute('aria-pressed',v==='play');
+  try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){window.scrollTo(0,0)}
+}
+$('goLearn').addEventListener('click',()=>showView('learn'));
+$('goPlay').addEventListener('click',()=>showView('play'));
+$('startQuest').addEventListener('click',()=>showView('play'));
+if(location.hash==='#play')showView('play');
+
+/* ---------- step navigation ---------- */
+let cur=0;const N=5;
+function go(i){
+  cur=Math.max(0,Math.min(N-1,i));
+  for(let k=0;k<N;k++){$('ls'+k).hidden=k!==cur;$('sn'+k).setAttribute('aria-current',k===cur);}
+  $('sn'+cur).classList.add('seen');
+  $('lBack').disabled=cur===0;$('lBack').style.visibility=cur===0?'hidden':'visible';
+  $('lNext').hidden=cur===N-1;
+  $('stepsNav').scrollIntoView({block:'nearest'});
+}
+document.querySelectorAll('.sn').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.s)));
+$('lBack').addEventListener('click',()=>go(cur-1));
+$('lNext').addEventListener('click',()=>go(cur+1));
+go(0);
+
+/* ---------- step 1: find the parts ---------- */
+const PARTS={
+  bar:['fi-bar','<b>Lever</b> · the stiff bar or plank. It must not bend.'],
+  ful:['fi-ful','<b>Fulcrum</b> · the fixed point the lever turns on. Also called the pivot.'],
+  load:['fi-load','<b>Load</b> · the heavy thing you want to move. Here it is a rock.'],
+  eff:['fi-eff','<b>Effort</b> · the force you put in: your push or pull.']
+};
+const found=new Set();
+function find(k){
+  if(found.has(k))return;found.add(k);
+  $('hs-'+k).classList.add('found');$('tg-'+k).classList.add('show');
+  const [id,html]=PARTS[k];const f=$(id);f.classList.remove('locked');f.innerHTML='✅ '+html;
+  $('foundN').textContent=found.size;
+  if(found.size===4){const c=$('partsDone');c.className='callout ok';c.textContent='You found them all! Every lever has a bar, a fulcrum, a load and an effort. Press Next.';}
+}
+document.querySelectorAll('.hot').forEach(g=>{
+  g.addEventListener('click',()=>find(g.dataset.k));
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();find(g.dataset.k)}});
+});
+
+/* ---------- step 2: small push, big lift ---------- */
+const PX=s=>60+520*s/12, PY=184;
+function b2(){
+  const f=+$('b2f').value, dL=f, dE=12-f, need=40*dL/dE, fx=PX(f);
+  $('b2fv').textContent=`battery side ${dL} · your side ${dE} blocks`;
+  $('b2ful').setAttribute('points',`${fx},${PY+6} ${fx-26},232 ${fx+26},232`);
+  const beam=$('b2beam');beam.style.transformOrigin=`${fx}px ${PY}px`;beam.style.transform='rotate(0deg)';
+  const n=Math.round(need*10)/10;
+  $('b2need').textContent=n+' N';$('b2need').style.color=need<20?'var(--good)':need===20?'var(--ink)':'var(--bad)';
+  $('b2bar').style.width=Math.min(100,need/60*100)+'%';$('b2mark').style.left=(20/60*100)+'%';
+  const a=$('b2arms');a.innerHTML='';
+  [[PX(0),fx,'var(--load)',dL],[fx,PX(12),'var(--effort)',dE]].forEach(([x1,x2,c,d])=>{
+    a.appendChild(mk('line',{x1:x1+4,y1:252,x2:x2-4,y2:252,stroke:c,'stroke-width':3}));
+    a.appendChild(mk('line',{x1:x1+4,y1:246,x2:x1+4,y2:258,stroke:c,'stroke-width':3}));
+    a.appendChild(mk('line',{x1:x2-4,y1:246,x2:x2-4,y2:258,stroke:c,'stroke-width':3}));
+    a.appendChild(mk('text',{x:(x1+x2)/2,y:270,'text-anchor':'middle','font-family':'var(--mono)','font-weight':700,'font-size':13,fill:c},d+' blocks'));
+  });
+  const m=$('b2msg');m.className='callout';m.textContent='Predict: will your 20 N push lift it? Then press Push down!';
+}
+$('b2f').addEventListener('input',b2);
+$('b2push').addEventListener('click',()=>{
+  const f=+$('b2f').value,dL=f,dE=12-f,need=40*dL/dE,beam=$('b2beam'),m=$('b2msg');
+  if(need<20){
+    const armE=dE*520/12,ang=Math.asin(Math.min(1,40/armE))*180/Math.PI;
+    beam.style.transform=`rotate(${ang}deg)`;
+    const rise=Math.round(40*dL/dE*10)/10;
+    m.className='callout ok';
+    m.innerHTML=`It lifts! Your long side makes a small push strong enough.<br>But notice: your hand moved down <b>40 cm</b> and the battery rose only <b>${rise} cm</b>. You push less, but you push farther.`;
+  } else if(need===20){
+    beam.style.transform='rotate(0deg)';
+    m.className='callout';m.textContent='Balanced! Your 20 N exactly matches the battery, so nothing moves. Move the fulcrum one step closer to the battery.';
+  } else {
+    beam.style.transform='rotate(-2deg)';setTimeout(()=>{beam.style.transform='rotate(0deg)'},350);
+    m.className='callout no';m.textContent=`Too heavy! You need ${Math.round(need*10)/10} N but you only have 20 N. Try moving the fulcrum closer to the battery.`;
+  }
+});
+b2();
+
+/* ---------- step 3: the door ---------- */
+const spots=$('spots'),btns=$('spotBtns');
+for(let d=1;d<=4;d++){
+  const x=66+64*d;
+  spots.appendChild(mk('circle',{cx:x,cy:51,r:11,fill:'var(--panel)',stroke:'var(--ink)','stroke-width':2}));
+  spots.appendChild(mk('text',{x:x,y:55.5,'text-anchor':'middle','font-family':'var(--mono)','font-weight':700,'font-size':13,fill:'var(--ink)'},d));
+  const b=document.createElement('button');b.className='spot';b.id='spot'+d;b.textContent=`Push at spot ${d}`;
+  b.addEventListener('click',()=>pushDoor(d,b));btns.appendChild(b);
+}
+function pushDoor(d,b){
+  const x=66+64*d,door=$('door'),pa=$('pushArrow'),te=10*d,m=$('doorMsg');
+  pa.innerHTML='';
+  pa.appendChild(mk('line',{x1:x,y1:4,x2:x,y2:30,stroke:'var(--effort)','stroke-width':6,'stroke-linecap':'round'}));
+  pa.appendChild(mk('polygon',{points:`${x-9},28 ${x+9},28 ${x},42`,fill:'var(--effort)'}));
+  door.style.transform='rotate(0deg)';
+  setTimeout(()=>{
+    if(te>=30){door.style.transform='rotate(58deg)';b.classList.add('ok');m.className='callout ok';
+      m.innerHTML=`10 N × ${d} = <b>${te}</b>. That is enough. The door swings open!${d===3?' Spot 4 would be even easier.':''}`;}
+    else{door.style.transform='rotate(3deg)';setTimeout(()=>{door.style.transform='rotate(0deg)'},300);b.classList.add('no');m.className='callout no';
+      m.innerHTML=`10 N × ${d} = <b>${te}</b>. Less than 30, so the door won't open. Same push, but too close to the hinge.`;}
+  },door.style.transform&&door.style.transform!=='rotate(0deg)'?500:50);
+}
+
+/* ---------- step 4: classes ---------- */
+const CL={
+ 1:{order:['E','F','L'],text:'The fulcrum is in the middle. You push down on one side and the load goes up on the other side.',
+    good:'making a push stronger and changing its direction (push down, load goes up).',
+    ex:['Seesaw','Scissors','Crowbar'],ev:'pliers for cutting wires for our EV circuit'},
+ 2:{order:['F','L','E'],text:'The load is in the middle. The fulcrum is at one end and you lift or squeeze at the other end.',
+    good:'always making a push stronger, because your effort is farther from the fulcrum than the load.',
+    ex:['Wheelbarrow','Bottle opener','Nutcracker'],ev:'the brake lever on our EV handlebar'},
+ 3:{order:['F','E','L'],text:'The effort is in the middle. You need a bigger push than the load, but the load end moves farther and faster.',
+    good:'speed and careful control, not strength.',
+    ex:['Tweezers','Fishing rod','Your arm lifting a cup'],ev:'tweezers for placing tiny wires and screws'}
+};
+const LBL={E:'Effort',F:'Fulcrum',L:'Load'};
+function drawCls(c){
+  const T=CL[c],svg=$('clsSvg');svg.innerHTML='';const xs=[60,180,300];
+  svg.appendChild(mk('line',{x1:20,y1:150,x2:340,y2:150,stroke:'var(--ground)','stroke-width':5}));
+  svg.appendChild(mk('rect',{x:30,y:94,width:300,height:12,rx:4,fill:'var(--ink)'}));
+  T.order.forEach((k,i)=>{const x=xs[i];
+    if(k==='F')svg.appendChild(mk('polygon',{points:`${x},106 ${x-22},150 ${x+22},150`,fill:'var(--accent)',stroke:'var(--ink)','stroke-width':2}));
+    if(k==='L')svg.appendChild(mk('rect',{x:x-22,y:58,width:44,height:36,rx:6,fill:'var(--load)'}));
+    if(k==='E'){if(c===1){svg.appendChild(mk('line',{x1:x,y1:40,x2:x,y2:78,stroke:'var(--effort)','stroke-width':6}));svg.appendChild(mk('polygon',{points:`${x-10},76 ${x+10},76 ${x},92`,fill:'var(--effort)'}))}
+      else{svg.appendChild(mk('line',{x1:x,y1:110,x2:x,y2:142,stroke:'var(--effort)','stroke-width':6}));svg.appendChild(mk('polygon',{points:`${x-10},118 ${x+10},118 ${x},104`,fill:'var(--effort)'}))}}
+    const y=k==='F'?172:(k==='E'&&c!==1)?172:32;
+    svg.appendChild(mk('text',{x:x,y:y,'text-anchor':'middle','font-family':'var(--display)','font-size':17,'font-weight':600,fill:k==='E'?'var(--effort)':k==='L'?'var(--load)':'var(--ink)'},LBL[k]));
+  });
+  $('clsOrder').innerHTML=T.order.map(k=>`<span class="tg ${k}">${LBL[k]}</span>`).join('<span aria-hidden="true">→</span>')+` <span style="color:var(--muted)">(${LBL[T.order[1]]} in the middle)</span>`;
+  $('clsText').textContent=T.text;$('clsGood').textContent=T.good;
+  $('clsEx').innerHTML=T.ex.map(e=>`<li>${e}</li>`).join('')+`<li><b>In our EV build:</b> ${T.ev}</li>`;
+}
+document.querySelectorAll('.ctab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.ctab').forEach(x=>x.setAttribute('aria-selected','false'));t.setAttribute('aria-selected','true');drawCls(+t.dataset.c)}));
+drawCls(1);
+
+/* ---------- step 5: ready check ---------- */
+const RQ=[
+ {q:'1. What do we call the point a lever turns around?',o:['Load','Fulcrum','Effort'],a:1,why:'The fulcrum is the fixed turning point.'},
+ {q:'2. You want to lift something heavy with a small push. Where should the fulcrum go?',o:['Close to the load','Close to your hand','Always in the middle'],a:0,why:'Then your side of the lever is long, so a small push has a big turning effect.'},
+ {q:'3. You push a door with 10 N at 2 spots from the hinge. What is the turning effect?',o:['5','12','20'],a:2,why:'Force × distance = 10 × 2 = 20.'},
+ {q:'4. A wheelbarrow has the load in the middle. Which class of lever is it?',o:['Class 1','Class 2','Class 3'],a:1,why:'Load in the middle → Class 2 (F L E = 1 2 3).'}
+];
+let answered=0,firstTry=0;
+RQ.forEach((it,i)=>{
+  const d=document.createElement('div');d.className='lq';
+  d.innerHTML=`<h3>${it.q}</h3><div class="opts"></div><div class="qfb" aria-live="polite"></div>`;
+  const o=d.querySelector('.opts'),fb=d.querySelector('.qfb');let done=false,miss=false;
+  it.o.forEach((t,j)=>{const b=document.createElement('button');b.className='opt';b.id=`rq${i}-${j}`;b.textContent=t;
+    b.addEventListener('click',()=>{if(done)return;
+      if(j===it.a){b.classList.add('right');fb.textContent='Yes! '+it.why;done=true;answered++;if(!miss)firstTry++;
+        const s=$('readyScore');
+        if(answered===RQ.length){s.className='callout ok';s.textContent=`${firstTry} of 4 right first time. ${firstTry>=3?'You are ready for Lever Quest!':'Good effort! Look back at the steps if you like, or start the game.'}`}
+        else s.textContent=`Answered ${answered} of 4.`;}
+      else{b.classList.add('wrong');miss=true;fb.textContent='Not quite. Try again.'}});
+    o.appendChild(b)});
+  $('readyQs').appendChild(d);
+});
+})();
+</script>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const W=800,H=430, GROUND=385, PIVY=335, SLOT0=100, SP=50;
+const X=s=>SLOT0+SP*s;
+let C={};
+let TOP=150;
+function readColors(){const cs=getComputedStyle(document.documentElement);
+  ['bg','panel','ink','muted','line','sky','ground','accent','effort','load','kid1','kid2','good','bad'].forEach(k=>C[k]=cs.getPropertyValue('--'+k).trim());}
+readColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readColors);
+new MutationObserver(readColors).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ---------- levels ---------- */
+const LEVELS=[
+ {title:'Fair seesaw',where:'Playground',
+  story:'Arya (300 N) sits on the seesaw. Kabir is heavier (400 N). Where should Kabir sit so the seesaw balances?',
+  goal:'Goal: make the seesaw balanced (both sides equal).',
+  f:6,fDrag:null,goalType:'balance',
+  objs:[{id:'arya',kind:'kid',col:'kid1',name:'Arya',W:300,slot:2,dir:1},
+        {id:'kabir',kind:'kid',col:'kid2',name:'Kabir',W:400,slot:11,dir:1,drag:[7,12]}],
+  learn:'A heavier person sits closer to the fulcrum. 300 × 4 = 400 × 3. That is why a parent sits near the middle of a seesaw with a small child.'},
+ {title:'Lift the battery',where:'EV workshop',
+  story:'Our EV battery weighs 40 N. You can only push with 10 N at the end of the plank. Move the fulcrum!',
+  goal:'Goal: lift the battery with your 10 N push.',
+  f:7,fDrag:[2,11],goalType:'lift',target:'batt',
+  objs:[{id:'batt',kind:'battery',name:'Battery',W:40,slot:1,dir:1},
+        {id:'hand',kind:'hand',name:'You',W:10,slot:12,dir:1}],
+  learn:'Moving the fulcrum close to the load makes your side of the lever long. A long effort arm means a small push can lift a big load. This is how a crowbar works.'},
+ {title:'The heavy crate',where:'Delivery day',
+  story:'A crate of EV parts weighs 120 N. The fulcrum is stuck in place. You can push with 20 N. Where should you push?',
+  goal:'Goal: lift the crate. Drag your hand along the plank.',
+  f:5,fDrag:null,goalType:'lift',target:'crate',
+  objs:[{id:'crate',kind:'crate',name:'Crate',W:120,slot:4,dir:1},
+        {id:'hand',kind:'hand',name:'You',W:20,slot:7,dir:1,drag:[6,12]}],
+  learn:'Push as far from the fulcrum as you can. That is why door handles are on the side far from the hinges, and why spanners have long handles.'},
+ {title:'Mystery box',where:'EV workshop',
+  story:'A parts box arrived with no label. Our motor weighs 20 N. Slide the motor until the lever balances, then work out what the box weighs.',
+  goal:'Goal: balance the lever, then answer the question.',
+  f:6,fDrag:null,goalType:'balance',ask:true,
+  objs:[{id:'box',kind:'mystery',name:'?',W:40,slot:3,dir:1},
+        {id:'motor',kind:'motor',name:'Motor 20 N',W:20,slot:8,dir:1,drag:[7,12]}],
+  learn:'A balanced lever is a weighing machine! Box × 3 = 20 × 6, so the box is 40 N, which is a mass of 4 kg. Old market scales worked like this.'},
+ {title:'Wheelbarrow',where:'School garden',
+  story:'This is a class 2 lever: the wheel is the fulcrum, you lift the handles at the other end, and the load sits in between. You can lift with 60 N. The sand weighs 200 N.',
+  goal:'Goal: lift the wheelbarrow. Slide the sand to a better place.',
+  f:0,fDrag:null,goalType:'lift',target:'sand',wheel:true,
+  objs:[{id:'sand',kind:'sand',name:'Sand 200 N',W:200,slot:8,dir:1,drag:[1,11]},
+        {id:'hand',kind:'handUp',name:'Lift',W:60,slot:12,dir:-1}],
+  learn:'In a wheelbarrow, put the heavy load near the wheel. The load arm is short and the handle arm is long, so lifting is easy.'},
+ {title:'EV charger catapult',where:'Fun lab',
+  story:'Drop a sandbag on the right end to fling the ball up into the yellow basket. The longer the ball\'s side of the lever, the higher it flies. Too long and it hits the roof!',
+  goal:'Goal: land the ball in the basket. Drag the fulcrum.',
+  f:5,fDrag:[2,10],goalType:'launch',
+  objs:[{id:'ball',kind:'ball',name:'Ball',W:1,slot:0,dir:1},
+        {id:'bag',kind:'bag',name:'Sandbag',W:100,slot:12,dir:1}],
+  learn:'A class 1 lever can swap force for speed. A long ball arm moves fast and far, but you need a heavy drop. Catapults and see-saw toys use this.'},
+ {title:'Battery on Planet X',where:'Space mission',
+  story:'Planet X has half the gravity of Earth. Our 4 kg battery now weighs only 20 N. You push with 10 N. How far from the battery can the fulcrum go now?',
+  goal:'Goal: lift the battery with the fulcrum as FAR from it as possible. (Find the farthest spot that still works.)',
+  f:2,fDrag:[2,11],goalType:'liftFar',target:'batt',best:4,
+  objs:[{id:'batt',kind:'battery',name:'Battery',W:20,slot:1,dir:1},
+        {id:'hand',kind:'hand',name:'You',W:10,slot:12,dir:1}],
+  learn:'Mass stays 4 kg everywhere, but weight halves on Planet X. With a lighter load, the fulcrum can sit farther away. On Earth the fulcrum had to be within 2 blocks of the battery. Here 3 blocks works.'}
+];
+
+let stars=new Array(LEVELS.length).fill(0);
+try{const s=JSON.parse(localStorage.getItem('leverQuestStars')||'null');if(Array.isArray(s)&&s.length===LEVELS.length)stars=s}catch(e){}
+function saveStars(){try{localStorage.setItem('leverQuestStars',JSON.stringify(stars))}catch(e){}}
+
+let L, st;
+function load(i){
+  const def=LEVELS[i];
+  L={...def,idx:i,objs:def.objs.map(o=>({...o})),f:def.f};
+  TOP=def.goalType==='launch'?0:150; cv.height=H-TOP;
+  st={angle:0,vel:0,target:0,mode:'edit',tests:0,solved:false,anim:null,ball:null,bagY:0,answered:!def.ask};
+  $('lvTitle').textContent=`Level ${i+1}: ${def.title}`;
+  $('where').textContent=def.where;
+  $('lvStory').textContent=def.story;
+  $('lvGoal').textContent=def.goal;
+  $('learn').hidden=true;$('learn').textContent=def.learn;
+  $('nextBtn').hidden=true;$('ansBox').hidden=true;$('ansBox').innerHTML='';
+  setMsg('info','Predict first: what will happen? Then press Test it!');
+  $('testBtn').disabled=false;
+  buildNudge();renderLevels();updateMeters();
+}
+function renderLevels(){
+  $('levels').innerHTML='';
+  LEVELS.forEach((lv,i)=>{const b=document.createElement('button');b.className='lv';b.id='lv'+i;
+    b.setAttribute('aria-current',L&&L.idx===i?'true':'false');
+    b.innerHTML=`<span>Level ${i+1}</span><span class="st">${'⭐'.repeat(stars[i])||'·'}</span>`;
+    b.addEventListener('click',()=>load(i));$('levels').appendChild(b)});
+  $('starTotal').textContent=stars.reduce((a,b)=>a+b,0);
+}
+function buildNudge(){
+  const n=$('nudge');n.innerHTML='';
+  const items=[];
+  if(L.fDrag)items.push({label:'Fulcrum',get:()=>L.f,set:v=>L.f=v,range:L.fDrag});
+  L.objs.filter(o=>o.drag).forEach(o=>items.push({label:o.kind==='kid'?o.name:o.name.replace(/ \d+ N/,''),get:()=>o.slot,set:v=>o.slot=v,range:o.drag}));
+  items.forEach((it,k)=>{const g=document.createElement('div');g.className='grp';
+    g.innerHTML=`<span>${it.label}</span><button class="nb" id="nb${k}a" aria-label="Move ${it.label} left">◀</button><button class="nb" id="nb${k}b" aria-label="Move ${it.label} right">▶</button>`;
+    g.querySelector('#nb'+k+'a').addEventListener('click',()=>{it.set(Math.max(it.range[0],it.get()-1));edited()});
+    g.querySelector('#nb'+k+'b').addEventListener('click',()=>{it.set(Math.min(it.range[1],it.get()+1));edited()});
+    n.appendChild(g)});
+}
+function setMsg(kind,text){const m=$('msg');m.className='msg '+kind;m.textContent=text}
+
+/* ---------- physics ---------- */
+function torque(){let T=0,Lf=0,R=0;
+  L.objs.forEach(o=>{if(L.goalType==='launch'&&o.kind==='bag'&&st.mode==='edit')return;
+    const t=o.W*o.dir*(o.slot-L.f);T+=t;if(t<0)Lf+=-t;else R+=t});
+  return {T,Lt:Lf,Rt:R};}
+function maxAngle(T){
+  if(L.wheel)return T<0?-Math.asin(55/(12*SP)):0;
+  if(T===0)return 0;
+  const arm=(T>0?(12-L.f):L.f)*SP; if(arm<=0)return 0;
+  let a=Math.min(0.32,Math.asin(Math.min(1,(GROUND-PIVY-4)/arm)));
+  const other=(T>0?L.f:(12-L.f))*SP;
+  if(L.goalType!=='launch'&&other>0)a=Math.min(a,Math.asin(Math.min(1,55/other)));
+  return Math.sign(T)*a;
+}
+function updateMeters(){
+  const {T,Lt,Rt}=torque();const exp=$('expert').checked;
+  const myst=L.objs.some(o=>o.kind==='mystery');
+  const mx=Math.max(Lt,Rt,1);
+  $('fL').style.width=(Lt/mx*100)+'%';$('fR').style.width=(Rt/mx*100)+'%';
+  const sides={L:[],R:[]};
+  L.objs.forEach(o=>{
+    const bagWaiting=L.goalType==='launch'&&o.kind==='bag'&&st.mode==='edit';
+    const d=Math.abs(o.slot-L.f), t=o.W*o.dir*(o.slot-L.f);
+    const nm=o.kind==='mystery'?'Box':o.kind==='ball'?'Ball':o.name.replace(/ \d+ N/,'');
+    if(bagWaiting){sides.R.push({txt:`${nm}: drops when you test (100 N × ${d})`,val:''});return}
+    if(t===0)return;
+    const w=o.kind==='mystery'?'?':o.W+' N';
+    const val=o.kind==='mystery'?'?':Math.abs(t);
+    (t<0?sides.L:sides.R).push({txt:`${nm}: ${w} × ${d}`,val});
+  });
+  const lTot=myst?'?':Lt, rTot=Rt;
+  const fm=(arr,tot)=>{
+    if(exp)return '<div><span>Numbers hidden. Work it out!</span></div>';
+    if(!arr.length)return '<div><span>Nothing turning this way</span><span>0</span></div>';
+    let h=arr.map(x=>`<div><span>${x.txt}</span><span>${x.val===''?'':'= '+x.val}</span></div>`).join('');
+    if(arr.length>1)h+=`<div class="tot"><span>Total</span><span>${tot}</span></div>`;
+    return h;
+  };
+  $('fmL').innerHTML=fm(sides.L,lTot);$('fmR').innerHTML=fm(sides.R,rTot);
+  $('mL').textContent=(exp||myst)?'?':Lt;$('mR').textContent=exp?'?':Rt;
+  const v=$('verdict');
+  if(exp){v.innerHTML='<span class="cmp">↺ ? &nbsp;vs&nbsp; ↻ ?</span>Predict which side wins, then test!';return}
+  if(L.goalType==='launch'&&st.mode==='edit'){const r=ratio();
+    v.innerHTML=`<span class="cmp">Ball arm ${L.f} ÷ bag arm ${12-L.f} = ${r.toFixed(1)}</span>The bigger this number, the higher the ball flies. Aim for 2 to 3.`;return}
+  if(myst){v.innerHTML=`<span class="cmp">↺ ? &nbsp;vs&nbsp; ↻ ${Rt}</span>The box is a mystery. Test it and watch which way the plank turns.`;return}
+  const sym=Lt>Rt?'>':Lt<Rt?'<':'=';
+  let why;
+  if(Lt===Rt)why='Equal, so the lever is balanced and does not turn.';
+  else if(L.wheel)why=Lt>Rt?'Anticlockwise is bigger, so your lift wins and the handles go up.':'Clockwise is bigger, so the sand wins and the wheelbarrow stays down.';
+  else why=Lt>Rt?'Anticlockwise is bigger, so the lever turns anticlockwise ↺ and the left side goes down.':'Clockwise is bigger, so the lever turns clockwise ↻ and the right side goes down.';
+  v.innerHTML=`<span class="cmp">↺ ${Lt} &nbsp;${sym}&nbsp; ↻ ${Rt}</span>${why}`;
+}
+function ratio(){const ball=L.objs.find(o=>o.kind==='ball'),bag=L.objs.find(o=>o.kind==='bag');return (L.f-ball.slot)/(bag.slot-L.f)}
+
+/* ---------- testing ---------- */
+function edited(){
+  $('dragTip').hidden=true;
+  if(st.mode==='anim')return;
+  st.mode='edit';st.target=0;st.ball=null;st.bagY=0;
+  if(!st.solved)setMsg('info','Predict first: what will happen? Then press Test it!');
+  updateMeters();
+}
+function finishTest(ok,text){
+  st.mode='done';
+  if(ok){
+    if(!st.solved){st.solved=true;const s=st.tests===1?3:st.tests===2?2:1;stars[L.idx]=Math.max(stars[L.idx],s);saveStars();renderLevels();
+      setMsg('good',text+'  '+'⭐'.repeat(s));}
+    $('learn').hidden=false;
+    $('nextBtn').hidden=L.idx>=LEVELS.length-1;
+    if(L.idx>=LEVELS.length-1)setMsg('good',text+'  You finished Lever Quest! Try for 3 stars on every level.');
+  } else setMsg('bad',text);
+}
+function test(){
+  $('dragTip').hidden=true;
+  if(st.mode==='anim')return;
+  st.tests++;
+  const {T}=torque();
+  if(L.goalType==='launch'){launch();return}
+  st.target=maxAngle(T);st.mode='anim';
+  const tok=st;setTimeout(()=>{if(st===tok)judge(T)},900);
+}
+function judge(T){
+  const g=L.goalType;
+  if(g==='balance'){
+    if(T===0){
+      if(L.ask&&!st.answered){st.mode='done';setMsg('good','Balanced! Now be a detective: what does the box weigh?');showAsk();return}
+      finishTest(true,'Balanced! Both sides have the same turning effect.');
+    } else {
+      const heavy=T>0?'right':'left';
+      const mover=L.objs.find(o=>o.drag);
+      const moverSide=mover.slot>L.f?'right':'left';
+      finishTest(false,`Not balanced, the ${heavy} side went down. ${heavy===moverSide?`Move ${mover.kind==='kid'?mover.name:'the motor'} closer to the fulcrum.`:`Move ${mover.kind==='kid'?mover.name:'the motor'} farther from the fulcrum.`}`);
+    }
+    return;
+  }
+  const tgt=L.objs.find(o=>o.id===L.target);
+  const side=Math.sign(tgt.slot-L.f);
+  const lifted=T!==0&&side!==0&&Math.sign(T)===-side;
+  if(g==='lift'){
+    if(lifted)finishTest(true,`It lifts! Your turning effect beat the ${tgt.name.replace(/ \d+ N/,'').toLowerCase()}.`);
+    else finishTest(false,hintLift(tgt,T));
+  } else if(g==='liftFar'){
+    if(!lifted)finishTest(false,hintLift(tgt,T));
+    else if(L.f<L.best){st.mode='done';setMsg('bad',`It lifts, but the fulcrum is only ${L.f-tgt.slot} block${L.f-tgt.slot>1?'s':''} from the battery. Can you move it farther and still lift?`)}
+    else finishTest(true,'It lifts, and that is the farthest spot that works!');
+  }
+}
+function hintLift(tgt,T){
+  if(T===0)return 'Perfectly balanced, but balanced means nothing moves. You need a little more turning effect on your side.';
+  if(L.wheel)return 'Too heavy to lift. The sand is far from the wheel, so its turning effect is big. Slide the sand closer to the wheel.';
+  if(L.fDrag)return 'Not enough. Your side of the plank is too short. Move the fulcrum closer to the battery.';
+  return 'Not enough. Your push is too close to the fulcrum. Push farther away.';
+}
+function showAsk(){
+  const a=$('ansBox');a.hidden=false;
+  a.innerHTML=`<label for="boxW" style="font-weight:700">Box weight:</label><input id="boxW" inputmode="decimal"><span>N</span>
+   <label for="boxM" style="font-weight:700">Mass:</label><input id="boxM" inputmode="decimal"><span>kg</span><button class="btn" id="ansBtn" style="font-size:1rem;padding:8px 14px">Check</button>`;
+  $('ansBtn').addEventListener('click',()=>{
+    const w=parseFloat($('boxW').value),m=parseFloat($('boxM').value);
+    if(w===40&&m===4){st.answered=true;a.hidden=true;L.objs.find(o=>o.kind==='mystery').name='40 N';finishTest(true,'Detective work! Box × 3 = 20 × 6 = 120, so the box is 40 N and 4 kg.')}
+    else if(w===40)setMsg('bad','Weight is right! For mass, remember 1 kg weighs 10 N on Earth.');
+    else{st.tests++;setMsg('bad','Not yet. The motor side is 20 × 6. The box side is box × 3. They are equal.')}
+  });
+}
+function launch(){
+  st.mode='anim';st.bagY=-220;st.ball=null;
+  const r=ratio();
+  st.anim={phase:'drop',t:0,r};
+}
+
+/* ---------- drawing ---------- */
+const FONT=(s,w=600)=>`${w} ${s}px Fredoka, "Trebuchet MS", sans-serif`;
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h)}
+function label(t,x,y,col,size=20){ctx.font=FONT(size);ctx.textAlign='center';ctx.fillStyle=col;ctx.fillText(t,x,y)}
+function glow(on){if(on){ctx.shadowColor=C.accent;ctx.shadowBlur=18}else{ctx.shadowBlur=0}}
+function drawObj(o,d){
+  // local frame: origin at beam top, x along beam
+  ctx.save();ctx.translate(d,-7);
+  const drag=!!o.drag&&st.mode!=='anim';
+  glow(drag&&!st.solved);
+  switch(o.kind){
+   case 'kid':{ctx.fillStyle=C[o.col];rr(-18,-62,36,46,10);ctx.fill();ctx.beginPath();ctx.arc(0,-78,15,0,7);ctx.fill();
+     ctx.fillRect(-14,-18,8,18);ctx.fillRect(6,-18,8,18);glow(0);label(`${o.name} ${o.W} N`,0,-102,C[o.col]);break}
+   case 'battery':{ctx.fillStyle=C.load;rr(-30,-46,60,46,7);ctx.fill();ctx.fillRect(-20,-53,10,8);ctx.fillRect(10,-53,10,8);glow(0);
+     ctx.fillStyle=C.panel;ctx.beginPath();ctx.moveTo(4,-40);ctx.lineTo(-8,-22);ctx.lineTo(0,-22);ctx.lineTo(-4,-6);ctx.lineTo(9,-26);ctx.lineTo(1,-26);ctx.closePath();ctx.fill();
+     label(`${o.name} ${o.W} N`,0,-64,C.load);break}
+   case 'crate':{ctx.fillStyle=C.load;rr(-34,-62,68,62,4);ctx.fill();glow(0);ctx.strokeStyle=C.panel;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-28,-56);ctx.lineTo(28,-6);ctx.moveTo(28,-56);ctx.lineTo(-28,-6);ctx.stroke();
+     label(`Crate ${o.W} N`,0,-74,C.load);break}
+   case 'mystery':{ctx.fillStyle=C.kid1;rr(-30,-56,60,56,6);ctx.fill();glow(0);label(o.name==='?'?'?':o.name.replace(' N',''),0,-18,C.panel,o.name==='?'?32:20);label('Box',0,-66,C.kid1);break}
+   case 'motor':{ctx.fillStyle=C.effort;rr(-26,-40,44,40,8);ctx.fill();ctx.fillRect(18,-26,14,12);glow(0);label('Motor 20 N',0,-52,C.effort);break}
+   case 'sand':{ctx.fillStyle=C.load;ctx.beginPath();ctx.moveTo(-40,0);ctx.quadraticCurveTo(0,-70,40,0);ctx.closePath();ctx.fill();glow(0);label(`Sand ${o.W} N`,0,-56,C.load);break}
+   case 'ball':{if(!st.ball){ctx.fillStyle=C.effort;ctx.beginPath();ctx.arc(0,-14,14,0,7);ctx.fill()}glow(0);break}
+   case 'bag':{if(st.mode!=='edit'){ctx.translate(0,st.bagY);ctx.fillStyle=C.muted;rr(-28,-44,56,44,10);ctx.fill();label('100 N',0,-16,C.panel,15)}else{ctx.globalAlpha=.35;ctx.setLineDash([6,5]);ctx.strokeStyle=C.muted;ctx.lineWidth=2;rr(-28,-44,56,44,10);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;label('drop zone',0,-52,C.muted,14)}break}
+   case 'hand':{const len=Math.min(110,30+o.W*1.6);ctx.strokeStyle=C.effort;ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,-len-8);ctx.lineTo(0,-16);ctx.stroke();
+     ctx.fillStyle=C.effort;ctx.beginPath();ctx.moveTo(-12,-20);ctx.lineTo(12,-20);ctx.lineTo(0,-2);ctx.closePath();ctx.fill();glow(0);label(`Push ${o.W} N`,0,-len-18,C.effort);break}
+   case 'handUp':{ctx.strokeStyle=C.effort;ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,-4);ctx.lineTo(0,-90);ctx.stroke();
+     ctx.fillStyle=C.effort;ctx.beginPath();ctx.moveTo(-12,-84);ctx.lineTo(12,-84);ctx.lineTo(0,-104);ctx.closePath();ctx.fill();glow(0);label(`Lift ${o.W} N`,0,-112,C.effort);break}
+  }
+  ctx.restore();
+}
+function draw(){
+  ctx.setTransform(1,0,0,1,0,-TOP);
+  ctx.clearRect(0,TOP,W,H-TOP);
+  ctx.fillStyle=C.sky;ctx.fillRect(0,TOP,W,H-TOP);
+  // catapult basket + roof
+  if(L.goalType==='launch'){
+    ctx.fillStyle=C.ink;ctx.fillRect(0,0,W,14);label('ROOF',W/2,34,C.muted,14);
+    const bx=X(0);ctx.fillStyle=C.accent;ctx.globalAlpha=.25;ctx.fillRect(bx-48,BASKET[0],96,BASKET[1]-BASKET[0]);ctx.globalAlpha=1;
+    ctx.strokeStyle=C.accent;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(bx-48,BASKET[0]);ctx.lineTo(bx-48,BASKET[1]);ctx.lineTo(bx+48,BASKET[1]);ctx.lineTo(bx+48,BASKET[0]);ctx.stroke();
+    label('basket',bx+90,BASKET[0]+30,C.ink,16);
+  }
+  ctx.fillStyle=C.ground;ctx.fillRect(0,GROUND,W,H-GROUND);
+  const px=X(L.f);
+  // wheelbarrow leg
+  if(L.wheel){ctx.fillStyle=C.muted;ctx.fillRect(X(11)-4,PIVY+7,8,GROUND-PIVY-7)}
+  // beam + objects
+  ctx.save();ctx.translate(px,PIVY);ctx.rotate(st.angle);
+  ctx.fillStyle=C.ink;rr(X(0)-px-20,-7,SP*12+40,14,5);ctx.fill();
+  for(let s=0;s<=12;s++){const d=X(s)-px;ctx.fillStyle=C.sky;ctx.beginPath();ctx.arc(d,0,3.5,0,7);ctx.fill();
+    if(st.mode==='edit'&&s!==L.f){ctx.font='700 13px "JetBrains Mono", monospace';ctx.fillStyle=C.muted;ctx.textAlign='center';ctx.fillText(Math.abs(s-L.f),d,26)}}
+  L.objs.forEach(o=>drawObj(o,X(o.slot)-px));
+  ctx.restore();
+  // fulcrum
+  glow(!!L.fDrag&&st.mode!=='anim'&&!st.solved);
+  if(L.wheel){ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(px,PIVY+22,26,0,7);ctx.fill();ctx.fillStyle=C.accent;ctx.beginPath();ctx.arc(px,PIVY+22,10,0,7);ctx.fill();glow(0);label('wheel = fulcrum',px+40,GROUND+30,C.ink,18)}
+  else{ctx.fillStyle=C.accent;ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px,PIVY+6);ctx.lineTo(px-26,GROUND);ctx.lineTo(px+26,GROUND);ctx.closePath();ctx.fill();glow(0);ctx.stroke();label('fulcrum',px,GROUND+30,C.ink,18)}
+  if(st.mode==='edit'){ctx.font='600 13px Fredoka, sans-serif';ctx.fillStyle=C.muted;ctx.textAlign='left';ctx.fillText('numbers = blocks from the fulcrum',12,H-10)}
+  // flying ball
+  if(st.ball){ctx.fillStyle=C.effort;ctx.beginPath();ctx.arc(st.ball.x,st.ball.y,14,0,7);ctx.fill();if(st.ball.bonk)label('BONK!',st.ball.x+60,50,C.bad,22)}
+}
+const BASKET=[92,190];
+
+/* ---------- loop ---------- */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.033,(now-last)/1000);last=now;
+  // catapult phases
+  if(st.anim){const a=st.anim;a.t+=dt;
+    if(a.phase==='drop'){st.bagY=Math.min(0,-220+a.t*a.t*1600);if(st.bagY>=0){a.phase='tip';a.t=0;st.target=maxAngle(1)}}
+    else if(a.phase==='tip'&&a.t>0.12){a.phase='fly';a.t=0;
+      const bx=X(0),startY=ballWorldY();
+      let peak=PIVY-21-70*a.r;const bonk=peak<28;if(bonk)peak=28;
+      const g=1400,v=Math.sqrt(2*g*Math.max(10,startY-peak));
+      st.ball={x:bx+(X(0)-X(L.f))*(Math.cos(st.angle)-1),y:startY,v:-v,g,bonk:false,willBonk:bonk,peak};}
+    else if(a.phase==='fly'){const b=st.ball;b.v+=b.g*dt;b.y+=b.v*dt;if(b.willBonk&&b.y<=b.peak){b.bonk=true}
+      if(b.v>0&&!a.judged){a.judged=true;const r=a.r;
+        const tok=st;setTimeout(()=>{if(st!==tok)return;st.anim=null;
+          if(r>=2&&r<=3){st.ball.y=BASKET[1]-16;st.ball.v=0;st.ball.g=0;finishTest(true,`In the basket! Ball arm is ${r.toFixed(1)} times the bag arm.`)}
+          else if(r>3)finishTest(false,'BONK! The ball flew too high and hit the roof. Make the ball\'s side a little shorter.');
+          else finishTest(false,'Too low. Make the ball\'s side of the lever longer, so it moves faster.');},450)}
+      if(b.y>PIVY+60){b.v=0;b.g=0}}
+  }
+  // spring to target
+  const k=55,c=8;const acc=k*(st.target-st.angle)-c*st.vel;st.vel+=acc*dt;st.angle+=st.vel*dt;
+  if(L.goalType!=='launch'&&st.mode==='anim'&&Math.abs(st.target-st.angle)<0.002&&Math.abs(st.vel)<0.01){/* settled */}
+  draw();requestAnimationFrame(frame);
+}
+function ballWorldY(){const d=X(0)-X(L.f);return PIVY+Math.sin(st.angle)*d-7-14}
+
+/* ---------- dragging ---------- */
+let dragging=null;
+function toLocal(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*(H-TOP)/r.height+TOP}}
+function pick(p){
+  if(st.mode==='anim')return null;
+  const px=X(L.f);
+  for(const o of L.objs){if(!o.drag)continue;const x=X(o.slot);if(Math.abs(p.x-x)<42&&p.y>PIVY-150&&p.y<PIVY+20)return {o}}
+  if(L.fDrag&&Math.abs(p.x-px)<40&&p.y>PIVY-10)return {f:true};
+  return null;
+}
+cv.addEventListener('pointerdown',e=>{const p=toLocal(e);const h=pick(p);if(!h)return;dragging=h;cv.setPointerCapture(e.pointerId);cv.classList.add('dragging');$('dragTip').hidden=true;
+  if(st.mode!=='edit'){st.mode='edit';st.target=0;st.ball=null;st.bagY=0}});
+cv.addEventListener('pointermove',e=>{
+  const p=toLocal(e);
+  if(!dragging){cv.style.cursor=pick(p)?'grab':'default';return}
+  let s=Math.round((p.x-SLOT0)/SP);
+  if(dragging.f){s=Math.max(L.fDrag[0],Math.min(L.fDrag[1],s));if(s!==L.f){L.f=s;edited()}}
+  else{const r=dragging.o.drag;s=Math.max(r[0],Math.min(r[1],s));if(s!==dragging.o.slot){dragging.o.slot=s;edited()}}
+});
+const endDrag=()=>{dragging=null;cv.classList.remove('dragging')};
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+
+$('testBtn').addEventListener('click',test);
+$('resetBtn').addEventListener('click',()=>load(L.idx));
+$('nextBtn').addEventListener('click',()=>load(Math.min(LEVELS.length-1,L.idx+1)));
+$('expert').addEventListener('change',updateMeters);
+
+load(0);requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
