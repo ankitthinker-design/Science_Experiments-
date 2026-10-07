@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where in space? Coordinate explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F8FB; --panel:#FFFFFF; --ink:#14213D; --muted:#5B6B82; --grid:#D8E3EE; --grid3:#B9C8D8; --line:#C9D6E3;
+  --x:#E4572E; --y:#1E9E5A; --z:#2F6FE4; --drone:#F2B705; --star:#C026D3; --good:#15803D; --warn:#C2410C;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1A2B; --panel:#16243A; --ink:#E8EEF6; --muted:#9FB0C6; --grid:#24354E; --grid3:#3A4E6B; --line:#2A3B55;
+    --x:#FF7A57; --y:#43C57F; --z:#6C9BFF; --drone:#F2B705; --star:#E879F9; --good:#4ADE80; --warn:#FB923C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1A2B; --panel:#16243A; --ink:#E8EEF6; --muted:#9FB0C6; --grid:#24354E; --grid3:#3A4E6B; --line:#2A3B55;
+  --x:#FF7A57; --y:#43C57F; --z:#6C9BFF; --drone:#F2B705; --star:#E879F9; --good:#4ADE80; --warn:#FB923C;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Lexend',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 18px 40px}
+h1{font-size:clamp(30px,5vw,48px);font-weight:800;margin:0;letter-spacing:-0.015em;line-height:1.1}
+.lede{margin:6px 0 18px;color:var(--muted);max-width:62ch;font-size:17px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.tab{font:inherit;font-weight:700;font-size:17px;padding:10px 20px;min-height:50px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.layout{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);align-items:start}
+@media (min-width:860px){.layout{grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr)}}
+.stage{background:var(--panel);border:2px solid var(--line);border-radius:20px;overflow:hidden;position:relative;touch-action:none;display:flex;justify-content:center;align-items:flex-start;min-height:320px}
+.stage canvas{display:block;max-width:100%;touch-action:none}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.box{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:16px 18px}
+.readout{font-size:clamp(38px,6.5vw,58px);font-weight:800;letter-spacing:-0.01em;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.readout .p{color:var(--muted);font-weight:500}
+.cx{color:var(--x)} .cy{color:var(--y)} .cz{color:var(--z)}
+.hint{color:var(--muted);font-size:15px;margin:8px 0 0}
+.row{display:grid;grid-template-columns:26px 50px minmax(0,1fr) 50px;align-items:center;gap:10px;margin-top:10px}
+.row:first-child{margin-top:0}
+.ax{font-weight:800;font-size:24px;text-align:center}
+.btn{font:inherit;font-weight:700;min-width:50px;min-height:50px;border-radius:14px;border:2px solid var(--line);background:var(--paper);color:var(--ink);font-size:22px;cursor:pointer;line-height:1}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);font-size:17px;padding:0 18px}
+.btn.quiet{font-size:16px;padding:0 16px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+input[type=range]{width:100%;height:34px;accent-color:var(--ink)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{font:inherit;font-weight:600;font-size:15px;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.task{font-size:19px;font-weight:700;margin:0;line-height:1.35}
+.msg{min-height:1.5em;font-weight:600;margin:10px 0 0}
+.msg.good{color:var(--good)} .msg.try{color:var(--warn)}
+.score{font-weight:700;color:var(--ink)}
+.pointlist{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{padding:4px 12px;border-radius:999px;border:2px solid var(--line);font-weight:600;font-variant-numeric:tabular-nums;font-size:15px}
+.chip.done{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.next{border-color:var(--z);box-shadow:0 0 0 2px var(--z) inset}
+.views{position:absolute;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;z-index:2}
+.views button{font:inherit;font-weight:700;font-size:14px;min-height:40px;min-width:52px;padding:6px 12px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.stagehint{position:absolute;left:12px;bottom:8px;margin:0;font-size:13px;color:var(--muted);pointer-events:none;z-index:2}
+.guess{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.guess label{display:flex;align-items:center;gap:6px;font-weight:800;font-size:22px}
+.guess input{width:72px;font:inherit;font-size:24px;font-weight:700;text-align:center;padding:6px 4px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink)}
+.check{display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:600;cursor:pointer}
+.check input{width:24px;height:24px;accent-color:var(--ink)}
+.err{padding:24px;color:var(--warn);font-weight:600}
+footer{margin-top:22px;color:var(--muted);font-size:14px;max-width:70ch}
+:focus-visible{outline:3px solid var(--z);outline-offset:2px}
+.mini{margin:12px 0 0;font-weight:700;display:flex;align-items:center;gap:8px}
+.pill{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;color:#fff;font-weight:800;font-size:15px}
+.pill.pick{background:#16A34A}.pill.drop{background:#EA580C}
+.stops{margin:12px 0 0;padding-left:22px;font-variant-numeric:tabular-nums}
+.stops li{margin:4px 0;font-weight:600}
+.stops .leg{color:var(--muted);font-weight:500;font-size:14px}
+.log{margin:10px 0 0;padding-left:22px;font-size:15px;font-variant-numeric:tabular-nums}
+.log li{margin:3px 0}
+.stars{font-size:26px;letter-spacing:4px}
+.lvl{margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Where in space?</h1>
+    <p class="lede">Every point has an address made of numbers. On a flat map you need two numbers. In space you need three.</p>
+    <div class="tabs" role="tablist" aria-label="Choose a world">
+      <button class="tab" role="tab" id="t2" aria-selected="true" aria-controls="p2">Flat world (x, y)</button>
+      <button class="tab" role="tab" id="t3" aria-selected="false" aria-controls="p3">Space world (x, y, z)</button>
+    </div>
+  </header>
+
+  <section id="p2" role="tabpanel" aria-labelledby="t2">
+    <div class="layout">
+      <div class="stage" id="s2"><canvas id="c2d" aria-label="A grid from 0 to 10. Tap a crossing point."></canvas></div>
+      <div class="side">
+        <div class="box">
+          <div class="readout" aria-live="polite"><span class="p">(</span><span class="cx" id="r2x">3</span><span class="p">, </span><span class="cy" id="r2y">5</span><span class="p">)</span></div>
+          <p class="hint">The first number is x: how far along. The second is y: how far up. Always x first!</p>
+        </div>
+        <div class="seg" role="group" aria-label="Flat world activity">
+          <button data-m2="explore" aria-pressed="true">Explore</button>
+          <button data-m2="treasure" aria-pressed="false">Treasure hunt</button>
+          <button data-m2="picture" aria-pressed="false">Mystery picture</button>
+        </div>
+        <div class="box" id="m2-explore">
+          <div class="row"><span class="ax cx">x</span><button class="btn" data-step="x2:-1" aria-label="x minus 1">&minus;</button><input type="range" min="0" max="10" step="1" value="3" id="x2" aria-label="x value"><button class="btn" data-step="x2:1" aria-label="x plus 1">+</button></div>
+          <div class="row"><span class="ax cy">y</span><button class="btn" data-step="y2:-1" aria-label="y minus 1">&minus;</button><input type="range" min="0" max="10" step="1" value="5" id="y2" aria-label="y value"><button class="btn" data-step="y2:1" aria-label="y plus 1">+</button></div>
+          <p class="hint">Drag the dot or use the buttons. The orange path walks along x, then the green path climbs up y.</p>
+        </div>
+        <div class="box" id="m2-treasure" hidden>
+          <p class="task">A diamond is hidden where two grid lines cross. Tap a crossing to dig.</p>
+          <p class="msg" id="tmsg" aria-live="polite"></p>
+          <p class="hint">Digs: <span class="score" id="ttries">0</span>. Diamonds found: <span class="score" id="tfound">0</span>.</p>
+          <div class="btns"><button class="btn primary" id="tnew">Hide a new diamond</button></div>
+        </div>
+        <div class="box" id="m2-picture" hidden>
+          <p class="task">Tap these points in order. What will you draw?</p>
+          <div class="pointlist" id="plist"></div>
+          <p class="msg" id="pmsg" aria-live="polite"></p>
+          <div class="btns"><button class="btn primary" id="pnew">Start again</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+    <div class="layout">
+      <div class="stage" id="s3">
+        <div class="views" role="group" aria-label="Camera view">
+          <button data-view="3d">3D</button><button data-view="top">Top</button><button data-view="front">Front</button><button data-view="side">Side</button>
+        </div>
+        <p class="stagehint">Drag to fly around. Pinch or scroll to zoom.</p>
+      </div>
+      <div class="side">
+        <div class="box">
+          <div class="readout" aria-live="polite"><span class="p">(</span><span class="cx" id="r3x">2</span><span class="p">, </span><span class="cy" id="r3y">3</span><span class="p">, </span><span class="cz" id="r3z">2</span><span class="p">)</span></div>
+          <p class="hint">x is along, y is back, z is up. Three numbers find any point in space.</p>
+        </div>
+        <div class="seg" role="group" aria-label="Space world activity">
+          <button data-m3="explore" aria-pressed="true">Explore</button>
+          <button data-m3="deliver" aria-pressed="false">Drone delivery</button>
+          <button data-m3="read" aria-pressed="false">Read the star</button>
+          <button data-m3="city" aria-pressed="false">City missions</button>
+        </div>
+        <div class="box" id="drone-controls">
+          <div class="row"><span class="ax cx">x</span><button class="btn" data-step="x3:-1" aria-label="x minus 1">&minus;</button><input type="range" min="0" max="8" step="1" value="2" id="x3" aria-label="drone x"><button class="btn" data-step="x3:1" aria-label="x plus 1">+</button></div>
+          <div class="row"><span class="ax cy">y</span><button class="btn" data-step="y3:-1" aria-label="y minus 1">&minus;</button><input type="range" min="0" max="8" step="1" value="3" id="y3" aria-label="drone y"><button class="btn" data-step="y3:1" aria-label="y plus 1">+</button></div>
+          <div class="row"><span class="ax cz">z</span><button class="btn" data-step="z3:-1" aria-label="z minus 1">&minus;</button><input type="range" min="0" max="8" step="1" value="2" id="z3" aria-label="drone z"><button class="btn" data-step="z3:1" aria-label="z plus 1">+</button></div>
+        </div>
+        <div class="box" id="m3-explore">
+          <p class="task">Fly the drone around.</p>
+          <p class="hint">Now tap Top. The z number disappears from view and you see a flat map, just like the Flat world. Tap Front: now you see x and z, but not y.</p>
+        </div>
+        <div class="box" id="m3-deliver" hidden>
+          <p class="task" id="dtask"></p>
+          <p class="hint">Fly there, then press Drop parcel.</p>
+          <p class="msg" id="dmsg" aria-live="polite"></p>
+          <div class="btns">
+            <button class="btn primary" id="ddrop">Drop parcel</button>
+            <button class="btn quiet" id="dshow">Show me the spot</button>
+            <button class="btn quiet" id="dnew">New delivery</button>
+          </div>
+          <p class="hint">Parcels delivered: <span class="score" id="dscore">0</span></p>
+        </div>
+        <div class="box" id="m3-read" hidden>
+          <p class="task">What are the coordinates of the purple star?</p>
+          <div class="guess">
+            <label class="cx">x <input type="number" inputmode="numeric" min="0" max="8" id="gx" aria-label="star x"></label>
+            <label class="cy">y <input type="number" inputmode="numeric" min="0" max="8" id="gy" aria-label="star y"></label>
+            <label class="cz">z <input type="number" inputmode="numeric" min="0" max="8" id="gz" aria-label="star z"></label>
+          </div>
+          <label class="check"><input type="checkbox" id="ghelp"> Show helper lines</label>
+          <p class="msg" id="gmsg" aria-live="polite"></p>
+          <div class="btns">
+            <button class="btn primary" id="gcheck">Check</button>
+            <button class="btn quiet" id="gnew">New star</button>
+          </div>
+          <p class="hint">Stars read: <span class="score" id="gscore">0</span>. Tip: the Top view shows x and y; the Front view shows x and z.</p>
+        </div>
+        <div class="box" id="m3-city" hidden>
+          <div class="seg lvl" role="group" aria-label="Mission level">
+            <button data-lvl="1" aria-pressed="true">1 Rooftops</button>
+            <button data-lvl="2" aria-pressed="false">2 Windows</button>
+            <button data-lvl="3" aria-pressed="false">3 Plan the route</button>
+          </div>
+          <p class="task" id="ctask"></p>
+          <p class="hint" id="chint"></p>
+          <div id="cread">
+            <p class="mini"><span class="pill pick">P</span> Pickup address</p>
+            <div class="guess">
+              <label class="cx">x <input type="number" inputmode="numeric" min="0" max="8" id="cpx" aria-label="pickup x"></label>
+              <label class="cy">y <input type="number" inputmode="numeric" min="0" max="8" id="cpy" aria-label="pickup y"></label>
+              <label class="cz">z <input type="number" inputmode="numeric" min="0" max="8" id="cpz" aria-label="pickup z"></label>
+            </div>
+            <p class="mini"><span class="pill drop">D</span> Drop address</p>
+            <div class="guess">
+              <label class="cx">x <input type="number" inputmode="numeric" min="0" max="8" id="cdx" aria-label="drop x"></label>
+              <label class="cy">y <input type="number" inputmode="numeric" min="0" max="8" id="cdy" aria-label="drop y"></label>
+              <label class="cz">z <input type="number" inputmode="numeric" min="0" max="8" id="cdz" aria-label="drop z"></label>
+            </div>
+            <label class="check"><input type="checkbox" id="chelp"> Show helper lines</label>
+            <div class="btns"><button class="btn primary" id="ccheck">Check and launch</button></div>
+          </div>
+          <div id="cplan" hidden>
+            <ol class="stops" id="cstops"></ol>
+            <p class="mini">Next stop</p>
+            <div class="guess">
+              <label class="cx">x <input type="number" inputmode="numeric" min="0" max="8" id="nsx" aria-label="next stop x"></label>
+              <label class="cy">y <input type="number" inputmode="numeric" min="0" max="8" id="nsy" aria-label="next stop y"></label>
+              <label class="cz">z <input type="number" inputmode="numeric" min="0" max="8" id="nsz" aria-label="next stop z"></label>
+            </div>
+            <div class="btns">
+              <button class="btn quiet" id="cadd">Add stop</button>
+              <button class="btn quiet" id="cundo">Undo stop</button>
+              <button class="btn primary" id="cfly">Fly the route</button>
+            </div>
+          </div>
+          <p class="msg" id="cmsg" aria-live="polite"></p>
+          <ol class="log" id="clog"></ol>
+          <div class="btns"><button class="btn quiet" id="cnext">Next mission</button><button class="btn quiet" id="cretry">Try again</button></div>
+          <p class="hint">Missions completed: <span class="score" id="cscore">0</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Made for the Weavers. Shapr3D works the same way: every point you draw has an x, a y and a z.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function msg(sel,text,kind){const el=$(sel);el.textContent=text;el.className='msg'+(kind?' '+kind:'');}
+
+/* ---------- tabs ---------- */
+let active='2';
+function showTab(t){
+  active=t;
+  $('#t2').setAttribute('aria-selected',String(t==='2'));
+  $('#t3').setAttribute('aria-selected',String(t==='3'));
+  $('#p2').hidden=t!=='2'; $('#p3').hidden=t!=='3';
+  if(t==='3'){init3d(); if(T3&&T3.resize) T3.resize();} else resize2d();
+}
+$('#t2').addEventListener('click',()=>showTab('2'));
+$('#t3').addEventListener('click',()=>showTab('3'));
+
+/* ---------- steppers ---------- */
+$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{
+  const parts=b.dataset.step.split(':'), inp=$('#'+parts[0]);
+  inp.value=Math.max(+inp.min,Math.min(+inp.max,+inp.value+Number(parts[1])));
+  inp.dispatchEvent(new Event('input'));
+}));
+
+/* ---------- FLAT WORLD (2D) ---------- */
+const G=10, cv=$('#c2d'), ctx=cv.getContext('2d');
+const pad=46, topPad=22;
+let size=400, cell=30;
+const s2={mode:'explore',p:{x:3,y:5},tre:null,guesses:[],found:0,tries:0,done:false,
+  pic:[[1,2],[9,2],[9,4],[7,4],[6,6],[3,6],[2,4],[1,4],[1,2]],step:0,wrong:null};
+const gx=x=>pad+x*cell, gy=y=>size-pad-y*cell;
+
+function resize2d(){
+  const host=$('#s2'), w=host.clientWidth-4;
+  if(w<=0) return;
+  size=Math.floor(Math.min(w,Math.max(300,window.innerHeight*0.72)));
+  cell=(size-pad-topPad)/G;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(size*dpr); cv.height=Math.round(size*dpr);
+  cv.style.width=size+'px'; cv.style.height=size+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw2d();
+}
+function ln(a,b,c,d){ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();}
+function tri(x,y,ang,col){ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-6,-7);ctx.lineTo(-6,7);ctx.closePath();ctx.fill();ctx.restore();}
+function dot(x,y,r,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(gx(x),gy(y),r,0,Math.PI*2);ctx.fill();}
+function coordLabel(x,y){
+  ctx.font='700 16px Lexend, system-ui, sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  const muted=cssv('--muted');
+  const parts=[['(',muted],[String(x),cssv('--x')],[', ',muted],[String(y),cssv('--y')],[')',muted]];
+  const w=parts.reduce((s,p)=>s+ctx.measureText(p[0]).width,0);
+  let sx=gx(x)+14, sy=gy(y)-14;
+  if(sx+w>size-6) sx=gx(x)-14-w;
+  if(sy<18) sy=gy(y)+28;
+  ctx.fillStyle=cssv('--panel');ctx.globalAlpha=0.92;ctx.fillRect(sx-5,sy-16,w+10,22);ctx.globalAlpha=1;
+  for(const [t,c] of parts){ctx.fillStyle=c;ctx.fillText(t,sx,sy);sx+=ctx.measureText(t).width;}
+}
+function draw2d(){
+  const ink=cssv('--ink'),muted=cssv('--muted'),grid=cssv('--grid'),X=cssv('--x'),Y=cssv('--y'),Z=cssv('--z'),panel=cssv('--panel'),warn=cssv('--warn');
+  ctx.setLineDash([]);ctx.clearRect(0,0,size,size);ctx.fillStyle=panel;ctx.fillRect(0,0,size,size);
+  ctx.lineWidth=1;ctx.strokeStyle=grid;ctx.lineCap='butt';
+  for(let i=0;i<=G;i++){ln(gx(i),gy(0),gx(i),gy(G));ln(gx(0),gy(i),gx(G),gy(i));}
+  ctx.lineWidth=4;ctx.lineCap='round';
+  ctx.strokeStyle=X;ln(gx(0),gy(0),gx(G)+4,gy(0));tri(gx(G)+10,gy(0),0,X);
+  ctx.strokeStyle=Y;ln(gx(0),gy(0),gx(0),gy(G)-4);tri(gx(0),gy(G)-10,-Math.PI/2,Y);
+  ctx.font='600 13px Lexend, system-ui, sans-serif';ctx.fillStyle=muted;ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  for(let i=0;i<=G;i++) ctx.fillText(String(i),gx(i),gy(0)+21);
+  ctx.textAlign='right';for(let i=1;i<=G;i++) ctx.fillText(String(i),gx(0)-10,gy(i)+4);
+  ctx.font='800 18px Lexend, system-ui, sans-serif';ctx.textAlign='center';ctx.fillStyle=X;ctx.fillText('x',gx(G),gy(0)+41);
+  ctx.fillStyle=Y;ctx.textAlign='left';ctx.fillText('y',6,gy(G)+6);
+
+  if(s2.mode==='explore'){
+    const x=s2.p.x,y=s2.p.y;
+    ctx.globalAlpha=0.45;ctx.lineWidth=9;ctx.strokeStyle=X;if(x>0) ln(gx(0),gy(0),gx(x),gy(0));ctx.globalAlpha=1;
+    ctx.lineWidth=4;ctx.strokeStyle=Y;ctx.setLineDash([8,6]);if(y>0) ln(gx(x),gy(0),gx(x),gy(y));
+    ctx.lineWidth=1.5;ctx.strokeStyle=muted;ctx.setLineDash([4,5]);if(x>0) ln(gx(0),gy(y),gx(x),gy(y));
+    ctx.setLineDash([]);
+    dot(x,y,11,panel);dot(x,y,8,ink);
+    coordLabel(x,y);
+  } else if(s2.mode==='treasure'){
+    s2.guesses.forEach((g,i)=>{
+      const last=i===s2.guesses.length-1;
+      ctx.strokeStyle=last?ink:muted;ctx.lineWidth=last?3:2;const px=gx(g.x),py=gy(g.y),r=6;
+      ln(px-r,py-r,px+r,py+r);ln(px-r,py+r,px+r,py-r);
+    });
+    if(s2.guesses.length&&!s2.done){const g=s2.guesses[s2.guesses.length-1];coordLabel(g.x,g.y);}
+    if(s2.done&&s2.tre){
+      dot(s2.tre.x,s2.tre.y,16,panel);
+      ctx.font='28px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('\u{1F48E}',gx(s2.tre.x),gy(s2.tre.y));ctx.textBaseline='alphabetic';
+      coordLabel(s2.tre.x,s2.tre.y);
+    }
+  } else {
+    const pts=s2.pic, done=s2.step>=pts.length;
+    if(done){
+      ctx.fillStyle=Z;ctx.globalAlpha=0.22;ctx.beginPath();ctx.moveTo(gx(pts[0][0]),gy(pts[0][1]));
+      for(let i=1;i<pts.length;i++) ctx.lineTo(gx(pts[i][0]),gy(pts[i][1]));
+      ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+    }
+    ctx.strokeStyle=Z;ctx.lineWidth=4;ctx.lineJoin='round';
+    for(let i=1;i<s2.step;i++) ln(gx(pts[i-1][0]),gy(pts[i-1][1]),gx(pts[i][0]),gy(pts[i][1]));
+    for(let i=0;i<Math.min(s2.step,pts.length);i++) dot(pts[i][0],pts[i][1],6,ink);
+    if(done){
+      [[3,2],[7,2]].forEach(w=>{dot(w[0],w[1],cell*0.85,ink);dot(w[0],w[1],cell*0.35,panel);});
+    }
+    if(s2.wrong){
+      const px=gx(s2.wrong.x),py=gy(s2.wrong.y),r=7;ctx.strokeStyle=warn;ctx.lineWidth=3;
+      ln(px-r,py-r,px+r,py+r);ln(px-r,py+r,px+r,py-r);
+    }
+  }
+}
+function setRead2(x,y){$('#r2x').textContent=x;$('#r2y').textContent=y;}
+function setP2(x,y){s2.p={x:x,y:y};$('#x2').value=x;$('#y2').value=y;setRead2(x,y);draw2d();}
+$('#x2').addEventListener('input',()=>setP2(+$('#x2').value,s2.p.y));
+$('#y2').addEventListener('input',()=>setP2(s2.p.x,+$('#y2').value));
+
+function toGrid(e){
+  const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+  return {x:Math.max(0,Math.min(G,Math.round((px-pad)/cell))),y:Math.max(0,Math.min(G,Math.round((size-pad-py)/cell)))};
+}
+let dragging=false;
+cv.addEventListener('pointerdown',e=>{
+  const p=toGrid(e);
+  if(s2.mode==='explore'){dragging=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}setP2(p.x,p.y);}
+  else if(s2.mode==='treasure') dig(p);
+  else picTap(p);
+});
+cv.addEventListener('pointermove',e=>{
+  if(!dragging||s2.mode!=='explore') return;
+  const p=toGrid(e); if(p.x!==s2.p.x||p.y!==s2.p.y) setP2(p.x,p.y);
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(t=>cv.addEventListener(t,()=>{dragging=false;}));
+
+function newTreasure(){
+  s2.tre={x:rnd(1,G),y:rnd(1,G)};s2.guesses=[];s2.tries=0;s2.done=false;
+  $('#ttries').textContent='0';msg('#tmsg','Where will you dig first?','');draw2d();
+}
+function dig(p){
+  if(s2.done||!s2.tre) return;
+  s2.tries++;$('#ttries').textContent=String(s2.tries);s2.guesses.push(p);setRead2(p.x,p.y);
+  const t=s2.tre;
+  if(p.x===t.x&&p.y===t.y){
+    s2.done=true;s2.found++;$('#tfound').textContent=String(s2.found);
+    msg('#tmsg','Found it at ('+t.x+', '+t.y+') in '+s2.tries+(s2.tries===1?' dig!':' digs!'),'good');
+  } else {
+    const h=[];
+    h.push(p.x<t.x?'go right (bigger x)':p.x>t.x?'go left (smaller x)':'x is correct');
+    h.push(p.y<t.y?'go up (bigger y)':p.y>t.y?'go down (smaller y)':'y is correct');
+    msg('#tmsg','Nothing at ('+p.x+', '+p.y+'). Hint: '+h.join(' and ')+'.','try');
+  }
+  draw2d();
+}
+$('#tnew').addEventListener('click',newTreasure);
+
+function buildChips(){
+  $('#plist').innerHTML=s2.pic.map((p,i)=>'<span class="chip'+(i<s2.step?' done':'')+(i===s2.step?' next':'')+'">('+p[0]+', '+p[1]+')</span>').join('');
+}
+function picTap(p){
+  if(s2.step>=s2.pic.length) return;
+  setRead2(p.x,p.y);
+  const tx=s2.pic[s2.step][0],ty=s2.pic[s2.step][1];
+  if(p.x===tx&&p.y===ty){
+    s2.step++;s2.wrong=null;
+    if(s2.step===s2.pic.length) msg('#pmsg','You drew an electric car! Its wheels are at (3, 2) and (7, 2).','good');
+    else msg('#pmsg','Yes! Next point: ('+s2.pic[s2.step][0]+', '+s2.pic[s2.step][1]+').','good');
+  } else {
+    s2.wrong=p;
+    msg('#pmsg','You tapped ('+p.x+', '+p.y+'). Look for ('+tx+', '+ty+'): '+tx+' along, then '+ty+' up.','try');
+  }
+  buildChips();draw2d();
+}
+function resetPicture(){s2.step=0;s2.wrong=null;buildChips();msg('#pmsg','Start at ('+s2.pic[0][0]+', '+s2.pic[0][1]+').','');draw2d();}
+$('#pnew').addEventListener('click',resetPicture);
+
+function setMode2(m){
+  s2.mode=m;
+  $$('[data-m2]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m2===m)));
+  ['explore','treasure','picture'].forEach(k=>{$('#m2-'+k).hidden=k!==m;});
+  if(m==='explore') setRead2(s2.p.x,s2.p.y);
+  if(m==='treasure'&&!s2.tre) newTreasure();
+  if(m==='picture'){ if(s2.step===0) resetPicture(); else buildChips(); }
+  draw2d();
+}
+$$('[data-m2]').forEach(b=>b.addEventListener('click',()=>setMode2(b.dataset.m2)));
+
+if(window.ResizeObserver) new ResizeObserver(()=>{if(active==='2') resize2d();}).observe($('#s2'));
+window.addEventListener('resize',()=>{if(active==='2') resize2d();});
+resize2d();
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>draw2d());
+
+/* ---------- CITY MISSIONS: data and pure logic ---------- */
+const CITY=[
+  {name:'Pharmacy',x0:1,x1:3,y0:1,y1:3,h:3,color:'#7FB3D5'},
+  {name:'School',x0:5,x1:7,y0:0,y1:2,h:2,color:'#F5CBA7'},
+  {name:'Tower',x0:3,x1:5,y0:3,y1:5,h:7,color:'#AEB6C6'},
+  {name:'Library',x0:1,x1:3,y0:5,y1:7,h:5,color:'#C39BD3'},
+  {name:'Hospital',x0:5,x1:7,y0:5,y1:7,h:6,color:'#F1948A'}
+];
+const PADS=[{name:'Depot',x:8,y:3},{name:'Park',x:4,y:1}];
+const SAFE=8, LIM=8;
+const pt=(x,y,z)=>({x:x,y:y,z:z});
+const MISSIONS={
+  1:[{pName:'Pharmacy roof',P:pt(2,2,3),dName:'School roof',D:pt(6,1,2)},
+     {pName:'Library roof',P:pt(2,6,5),dName:'Hospital roof',D:pt(6,6,6)},
+     {pName:'School roof',P:pt(6,1,2),dName:'Tower roof',D:pt(4,4,7)}],
+  2:[{pName:'Depot',P:pt(8,3,0),dName:'Hospital side window',D:pt(7,6,3),n:[1,0,0]},
+     {pName:'Pharmacy roof',P:pt(2,2,3),dName:'Library front window',D:pt(2,5,2),n:[0,-1,0]},
+     {pName:'Park',P:pt(4,1,0),dName:'Hospital front window',D:pt(6,5,4),n:[0,-1,0]}],
+  3:[{pName:'Pharmacy roof',P:pt(2,2,3),dName:'Hospital roof',D:pt(6,6,6)},
+     {pName:'Park',P:pt(4,1,0),dName:'Library front window',D:pt(2,5,2)},
+     {pName:'Depot',P:pt(8,3,0),dName:'Library roof',D:pt(2,6,5)}]
+};
+const E=1e-9;
+function insideB(x,y,z){return CITY.find(b=>x>b.x0+E&&x<b.x1-E&&y>b.y0+E&&y<b.y1-E&&z>-E&&z<b.h-E)||null;}
+function stepBlocked(a,b){return insideB((a.x+b.x)/2,(a.y+b.y)/2,(a.z+b.z)/2)||insideB(b.x,b.y,b.z);}
+const same=(a,b)=>a.x===b.x&&a.y===b.y&&a.z===b.z;
+const fmtXYZ=p=>'('+p.x+', '+p.y+', '+p.z+')';
+function shortest(P,D){
+  const key=p=>p.x+','+p.y+','+p.z, dist=new Map([[key(P),0]]), q=[P];
+  const dirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+  while(q.length){
+    const c=q.shift(), dc=dist.get(key(c));
+    if(same(c,D)) return dc;
+    for(const d of dirs){
+      const n=pt(c.x+d[0],c.y+d[1],c.z+d[2]);
+      if(n.x<0||n.y<0||n.z<0||n.x>LIM||n.y>LIM||n.z>LIM) continue;
+      const k=key(n); if(dist.has(k)||stepBlocked(c,n)) continue;
+      dist.set(k,dc+1);q.push(n);
+    }
+  }
+  return Infinity;
+}
+function legProblem(a,b,i){
+  const ch=['x','y','z'].filter(k=>a[k]!==b[k]);
+  if(ch.length===0) return 'That stop is the same as the one before it. Change one number.';
+  if(ch.length>1) return 'From '+fmtXYZ(a)+' to '+fmtXYZ(b)+' changes '+ch.join(' and ')+' at the same time. City drones fly along one axis per leg, so change only one number.';
+  if(insideB(b.x,b.y,b.z)) return fmtXYZ(b)+' is inside the '+insideB(b.x,b.y,b.z).name+'!';
+  const k=ch[0], sg=Math.sign(b[k]-a[k]);let c=Object.assign({},a);
+  while(c[k]!==b[k]){const n=Object.assign({},c);n[k]+=sg;const hit=stepBlocked(c,n);if(hit) return 'That leg would crash into the '+hit.name+' near '+fmtXYZ(n)+'. Try going over or around it.';c=n;}
+  return null;
+}
+function autoRoute(m){
+  const P=m.P,D=m.D,A=m.n?pt(D.x+m.n[0],D.y+m.n[1],D.z+m.n[2]):D;
+  const raw=[P,pt(P.x,P.y,SAFE),pt(A.x,P.y,SAFE),pt(A.x,A.y,SAFE),pt(A.x,A.y,A.z)];
+  if(m.n) raw.push(D);
+  return raw.filter((p,i)=>i===0||!same(p,raw[i-1]));
+}
+function routeLength(pts){let d=0;for(let i=1;i<pts.length;i++) d+=Math.abs(pts[i].x-pts[i-1].x)+Math.abs(pts[i].y-pts[i-1].y)+Math.abs(pts[i].z-pts[i-1].z);return d;}
+function legText(a,b,i){
+  const k=['x','y','z'].find(q=>a[q]!==b[q]), d=b[k]-a[k], u=Math.abs(d);
+  const word={x:d>0?'right':'left',y:d>0?'back':'forward',z:d>0?'up':'down'}[k];
+  return 'Leg '+i+': only '+k+' changed, '+a[k]+' \u2192 '+b[k]+' ('+u+(u===1?' unit ':' units ')+word+')';
+}
+
+/* ---------- SPACE WORLD (3D) ---------- */
+let T3=null;
+const s3={mode:'explore',d:{x:2,y:3,z:2},del:null,delDone:false,shown:false,dscore:0,star:null,solved:false,gscore:0,help:false,
+  city:{lvl:1,idx:{1:0,2:0,3:0},m:null,solved:false,reveal:false,stops:[],flying:false,score:0,help:false,pos:null}};
+
+function setRead3(p){
+  $('#r3x').textContent=p?p.x:'?';$('#r3y').textContent=p?p.y:'?';$('#r3z').textContent=p?p.z:'?';
+}
+
+function init3d(){
+  if(T3) return;
+  const host=$('#s3');
+  if(!window.THREE){
+    const p=document.createElement('p');p.className='err';
+    p.textContent='The 3D view could not load. Check the internet connection and reload the page.';
+    host.appendChild(p);T3={failed:true,sync:function(){},resize:function(){}};return;
+  }
+  const T=window.THREE, N=8;
+  let renderer;
+  try{renderer=new T.WebGLRenderer({antialias:true,alpha:true});}
+  catch(err){
+    const p=document.createElement('p');p.className='err';p.textContent='This device cannot show 3D graphics.';
+    host.appendChild(p);T3={failed:true,sync:function(){},resize:function(){}};return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.domElement.setAttribute('aria-label','3D space with x, y and z axes and a drone');
+  host.insertBefore(renderer.domElement,host.firstChild);
+  const scene=new T.Scene(), camera=new T.PerspectiveCamera(42,1,0.1,300);
+  scene.add(new T.AmbientLight(0xffffff,0.72));
+  const dl=new T.DirectionalLight(0xffffff,0.65);dl.position.set(8,20,12);scene.add(dl);
+  const V=(x,y,z)=>new T.Vector3(x,z,-y);
+  const cx=cssv('--x'),cy=cssv('--y'),cz=cssv('--z');
+
+  const gridPts=[];
+  for(let i=0;i<=N;i++){gridPts.push(V(i,0,0),V(i,N,0),V(0,i,0),V(N,i,0));}
+  const gridMat=new T.LineBasicMaterial({color:cssv('--grid3')});
+  scene.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(gridPts),gridMat));
+  const floor=new T.Mesh(new T.PlaneGeometry(N,N),new T.MeshBasicMaterial({color:cy,transparent:true,opacity:0.06,side:T.DoubleSide,depthWrite:false}));
+  floor.rotation.x=-Math.PI/2;floor.position.copy(V(N/2,N/2,0));scene.add(floor);
+
+  function axis(color,rot){
+    const g=new T.Group(),m=new T.MeshLambertMaterial({color:color}),L=N+1;
+    const c=new T.Mesh(new T.CylinderGeometry(0.055,0.055,L,12),m);c.position.y=L/2;g.add(c);
+    const k=new T.Mesh(new T.ConeGeometry(0.2,0.5,18),m);k.position.y=L+0.25;g.add(k);
+    if(rot) rot(g);scene.add(g);
+  }
+  axis(cx,g=>{g.rotation.z=-Math.PI/2;});
+  axis(cy,g=>{g.rotation.x=-Math.PI/2;});
+  axis(cz,null);
+
+  function sprite(text,color,s){
+    const c=document.createElement('canvas');c.width=c.height=128;
+    const g=c.getContext('2d');g.font='800 82px Lexend, system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.fillStyle=color;g.fillText(text,64,70);
+    const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),transparent:true,depthWrite:false}));
+    sp.scale.set(s,s,1);scene.add(sp);return sp;
+  }
+  sprite('x',cx,1.2).position.copy(V(N+1.9,0,0));
+  sprite('y',cy,1.2).position.copy(V(0,N+1.9,0));
+  sprite('z',cz,1.2).position.copy(V(0,0,N+1.9));
+  const num='#8796AB';
+  for(let i=1;i<=N;i++){
+    sprite(String(i),num,0.62).position.copy(V(i,-0.6,0));
+    sprite(String(i),num,0.62).position.copy(V(-0.6,i,0));
+    sprite(String(i),num,0.62).position.copy(V(-0.55,0,i));
+  }
+  sprite('0',num,0.62).position.copy(V(-0.5,-0.5,0));
+
+  const drone=new T.Group(), blades=[];
+  drone.add(new T.Mesh(new T.BoxGeometry(0.62,0.2,0.62),new T.MeshLambertMaterial({color:cssv('--drone')})));
+  [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(ab=>{
+    const disc=new T.Mesh(new T.CylinderGeometry(0.25,0.25,0.03,24),new T.MeshLambertMaterial({color:0x5b6b82,transparent:true,opacity:0.55}));
+    disc.position.set(ab[0]*0.42,0.14,ab[1]*0.42);drone.add(disc);
+    const bl=new T.Mesh(new T.BoxGeometry(0.48,0.025,0.07),new T.MeshLambertMaterial({color:0x14213d}));
+    bl.position.set(ab[0]*0.42,0.17,ab[1]*0.42);drone.add(bl);blades.push(bl);
+  });
+  scene.add(drone);
+
+  const star=new T.Mesh(new T.OctahedronGeometry(0.4),new T.MeshLambertMaterial({color:cssv('--star')}));
+  star.visible=false;scene.add(star);
+  const parcel=new T.Mesh(new T.BoxGeometry(0.55,0.55,0.55),new T.MeshLambertMaterial({color:cssv('--good'),transparent:true,opacity:0.8}));
+  parcel.visible=false;scene.add(parcel);
+
+  const rings=[];
+  function dline(color){
+    const l=new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(),new T.Vector3(0,1,0)]),new T.LineDashedMaterial({color:color,dashSize:0.22,gapSize:0.14}));
+    scene.add(l);return l;
+  }
+  function guideSet(){
+    const ring=new T.Mesh(new T.RingGeometry(0.14,0.25,28),new T.MeshBasicMaterial({color:cssv('--ink'),side:T.DoubleSide}));
+    ring.rotation.x=-Math.PI/2;scene.add(ring);rings.push(ring);
+    return {lx:dline(cx),ly:dline(cy),lz:dline(cz),ring:ring};
+  }
+  function setL(l,a,b){l.geometry.setFromPoints([a,b]);l.computeLineDistances();}
+  function setGuides(g,p,vis){
+    const P=V(p.x,p.y,p.z),F=V(p.x,p.y,0);
+    setL(g.lx,V(0,p.y,0),F);setL(g.ly,V(p.x,0,0),F);setL(g.lz,F,P);
+    g.ring.position.copy(F);g.ring.position.y=0.01;
+    [g.lx,g.ly,g.lz,g.ring].forEach(o=>{o.visible=vis;});
+  }
+  const gD=guideSet(), gS=guideSet(), gP=guideSet(), gQ=guideSet();
+
+  /* city scene */
+  const cityG=new T.Group();cityG.visible=false;scene.add(cityG);
+  function textSprite(text,s){
+    const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');
+    g.font='700 60px Lexend, system-ui, sans-serif';const w=Math.min(500,g.measureText(text).width+48);
+    g.fillStyle='rgba(255,255,255,0.88)';const x0=(512-w)/2;
+    g.beginPath();if(g.roundRect) g.roundRect(x0,20,w,88,28); else g.rect(x0,20,w,88);g.fill();
+    g.fillStyle='#14213D';g.textAlign='center';g.textBaseline='middle';g.fillText(text,256,66);
+    const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),transparent:true,depthWrite:false}));
+    sp.scale.set(3.2*s,0.8*s,1);return sp;
+  }
+  function badge(letter,color){
+    const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+    g.fillStyle=color;g.beginPath();g.arc(64,64,58,0,Math.PI*2);g.fill();
+    g.fillStyle='#ffffff';g.font='800 72px Lexend, system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(letter,64,70);
+    const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),transparent:true,depthTest:false}));
+    sp.scale.set(0.8,0.8,1);sp.renderOrder=5;return sp;
+  }
+  const lineMat=new T.LineBasicMaterial({color:0x14213d,transparent:true,opacity:0.65});
+  const floorMat=new T.LineBasicMaterial({color:0x14213d,transparent:true,opacity:0.32});
+  CITY.forEach(b=>{
+    const w=b.x1-b.x0,d=b.y1-b.y0;
+    const mesh=new T.Mesh(new T.BoxGeometry(w,b.h,d),new T.MeshLambertMaterial({color:b.color}));
+    mesh.position.copy(V((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.h/2));cityG.add(mesh);
+    const ed=new T.LineSegments(new T.EdgesGeometry(mesh.geometry),lineMat);ed.position.copy(mesh.position);cityG.add(ed);
+    const fl=[],o=0.012;
+    for(let z=1;z<b.h;z++){
+      const c=[V(b.x0-o,b.y0-o,z),V(b.x1+o,b.y0-o,z),V(b.x1+o,b.y1+o,z),V(b.x0-o,b.y1+o,z)];
+      for(let i=0;i<4;i++) fl.push(c[i],c[(i+1)%4]);
+    }
+    if(fl.length) cityG.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(fl),floorMat));
+    const cxm=(b.x0+b.x1)/2,cym=(b.y0+b.y1)/2;const lab=textSprite(b.name,0.8);lab.position.copy(V(cxm,cym,b.h+1.75));cityG.add(lab);
+    cityG.add(new T.Line(new T.BufferGeometry().setFromPoints([V(cxm+0.45,cym,b.h),V(cxm+0.45,cym,b.h+1.4)]),floorMat));
+  });
+  PADS.forEach(pd=>{
+    const m=new T.Mesh(new T.BoxGeometry(0.9,0.04,0.9),new T.MeshLambertMaterial({color:0x8796ab}));
+    m.position.copy(V(pd.x,pd.y,0.02));cityG.add(m);
+    const lab=textSprite(pd.name,0.7);lab.position.copy(V(pd.x,pd.y,1.75));cityG.add(lab);
+    cityG.add(new T.Line(new T.BufferGeometry().setFromPoints([V(pd.x+0.45,pd.y,0),V(pd.x+0.45,pd.y,1.4)]),floorMat));
+  });
+  const pickMk=new T.Mesh(new T.CylinderGeometry(0.36,0.36,0.06,28),new T.MeshLambertMaterial({color:0x16a34a}));
+  const dropMk=new T.Mesh(new T.CylinderGeometry(0.36,0.36,0.06,28),new T.MeshLambertMaterial({color:0xea580c}));
+  const winMk=new T.Mesh(new T.BoxGeometry(0.7,0.7,0.06),new T.MeshLambertMaterial({color:0xea580c}));
+  const pB=badge('P','#16A34A'), dB=badge('D','#EA580C');
+  [pickMk,dropMk,winMk,pB,dB].forEach(o=>cityG.add(o));
+  const TMAX=6000, trailArr=new Float32Array(TMAX*3), trailGeo=new T.BufferGeometry();
+  trailGeo.setAttribute('position',new T.BufferAttribute(trailArr,3));trailGeo.setDrawRange(0,0);
+  const trail=new T.Line(trailGeo,new T.LineBasicMaterial({color:cssv('--drone')}));trail.frustumCulled=false;cityG.add(trail);
+  let trailN=0;
+  const tubeMat=new T.MeshLambertMaterial({color:cssv('--drone')}),tubes=[];
+  function addTube(a,b){
+    const A=V(a.x,a.y,a.z),B=V(b.x,b.y,b.z),len=A.distanceTo(B);if(len<1e-6) return;
+    const m=new T.Mesh(new T.CylinderGeometry(0.07,0.07,len,10),tubeMat);
+    m.position.copy(A).add(B).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),B.clone().sub(A).normalize());
+    cityG.add(m);tubes.push(m);
+  }
+  function clearTubes(){tubes.forEach(t=>{cityG.remove(t);t.geometry.dispose();});tubes.length=0;}
+  function pushTrail(p){if(trailN>=TMAX) return;const v=V(p.x,p.y,p.z);trailArr[trailN*3]=v.x;trailArr[trailN*3+1]=v.y+0.02;trailArr[trailN*3+2]=v.z;trailN++;trailGeo.setDrawRange(0,trailN);trailGeo.attributes.position.needsUpdate=true;}
+  function cityLoad(m){
+    flight=null;trailN=0;trailGeo.setDrawRange(0,0);clearTubes();
+    pickMk.position.copy(V(m.P.x,m.P.y,m.P.z));pickMk.position.y+=0.03;
+    pB.position.copy(V(m.P.x,m.P.y,m.P.z+0.75));
+    if(m.n){
+      dropMk.visible=false;winMk.visible=true;
+      winMk.geometry.dispose();winMk.geometry=m.n[0]!==0?new T.BoxGeometry(0.06,0.7,0.7):new T.BoxGeometry(0.7,0.7,0.06);
+      winMk.position.copy(V(m.D.x+m.n[0]*0.04,m.D.y+m.n[1]*0.04,m.D.z));
+      dB.position.copy(V(m.D.x+m.n[0]*0.8,m.D.y+m.n[1]*0.8,m.D.z+0.5));
+    } else {
+      winMk.visible=false;dropMk.visible=true;
+      dropMk.position.copy(V(m.D.x,m.D.y,m.D.z));dropMk.position.y+=0.03;
+      dB.position.copy(V(m.D.x,m.D.y,m.D.z+0.75));
+    }
+    sync();
+  }
+  let flight=null,lastT=0;
+  function cityFly(ptsList,done){
+    trailN=0;clearTubes();pushTrail(ptsList[0]);
+    if(reduce||ptsList.length<2){ptsList.forEach(pushTrail);for(let i=1;i<ptsList.length;i++) addTube(ptsList[i-1],ptsList[i]);s3.city.pos=Object.assign({},ptsList[ptsList.length-1]);sync();if(done) done();return;}
+    flight={pts:ptsList,i:0,t:0,done:done};
+  }
+  function stepFlight(dt){
+    if(!flight) return;
+    const a=flight.pts[flight.i],b=flight.pts[flight.i+1];
+    const len=Math.abs(b.x-a.x)+Math.abs(b.y-a.y)+Math.abs(b.z-a.z)||1;
+    flight.t+=dt*2.6/len;
+    if(flight.t>=1){
+      s3.city.pos=Object.assign({},b);pushTrail(b);addTube(a,b);flight.i++;flight.t=0;
+      if(flight.i>=flight.pts.length-1){const d=flight.done;flight=null;sync();if(d) d();return;}
+    } else {
+      const t=flight.t;s3.city.pos=pt(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,a.z+(b.z-a.z)*t);pushTrail(s3.city.pos);
+    }
+    sync();
+  }
+
+  const tgt=V(N/2,N/2,3), cam={r:23,th:0.7,ph:1.0};
+  function place(){
+    camera.position.set(tgt.x+cam.r*Math.sin(cam.ph)*Math.sin(cam.th),tgt.y+cam.r*Math.cos(cam.ph),tgt.z+cam.r*Math.sin(cam.ph)*Math.cos(cam.th));
+    camera.lookAt(tgt);
+  }
+  place();
+  let tw=null;
+  const VIEWS={'3d':[0.7,1.0],top:[0,0.0006],front:[0,Math.PI/2-0.001],side:[Math.PI/2,Math.PI/2-0.001]};
+  function goView(name){
+    const v=VIEWS[name];
+    if(reduce){cam.th=v[0];cam.ph=v[1];place();return;}
+    let dth=v[0]-cam.th;dth=((dth+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+    tw={t0:performance.now(),th:cam.th,ph:cam.ph,dth:dth,dph:v[1]-cam.ph};
+  }
+  $$('[data-view]').forEach(b=>b.addEventListener('click',()=>goView(b.dataset.view)));
+
+  const el=renderer.domElement, pts=new Map();let lastDist=0;
+  el.style.touchAction='none';
+  el.addEventListener('pointerdown',e=>{try{el.setPointerCapture(e.pointerId);}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});tw=null;});
+  el.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId)) return;
+    const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){
+      cam.th-=(e.clientX-prev.x)*0.008;cam.ph-=(e.clientY-prev.y)*0.008;
+      cam.ph=Math.max(0.0006,Math.min(Math.PI/2-0.001,cam.ph));place();
+    } else if(pts.size===2){
+      const a=Array.from(pts.values()),dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+      if(lastDist){cam.r=Math.max(9,Math.min(40,cam.r*lastDist/dist));place();}
+      lastDist=dist;
+    }
+  });
+  const endPtr=e=>{pts.delete(e.pointerId);if(pts.size<2) lastDist=0;};
+  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,endPtr));
+  el.addEventListener('wheel',e=>{e.preventDefault();cam.r=Math.max(9,Math.min(40,cam.r*(e.deltaY>0?1.08:0.925)));place();},{passive:false});
+
+  function resize(){
+    const w=host.clientWidth-4;if(w<=0) return;
+    const h=Math.round(Math.max(320,Math.min(w*0.8,window.innerHeight*0.72)));
+    renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+  if(window.ResizeObserver) new ResizeObserver(()=>{if(active==='3') resize();}).observe(host);
+  window.addEventListener('resize',()=>{if(active==='3') resize();});
+
+  function sync(){
+    const reading=s3.mode==='read', city=s3.mode==='city', c=s3.city;
+    cityG.visible=city;
+    drone.visible=!reading;
+    const dp=(city&&c.pos)?c.pos:s3.d;
+    drone.position.copy(V(dp.x,dp.y,dp.z));if(city) drone.position.y+=0.12;
+    setGuides(gD,s3.d,!reading&&!city);
+    star.visible=reading&&!!s3.star;
+    if(s3.star){star.position.copy(V(s3.star.x,s3.star.y,s3.star.z));setGuides(gS,s3.star,reading&&(s3.help||s3.solved));}
+    else setGuides(gS,pt(0,0,0),false);
+    const showParcel=s3.mode==='deliver'&&s3.del&&(s3.delDone||s3.shown);
+    parcel.visible=!!showParcel;
+    if(s3.del) parcel.position.copy(V(s3.del.x,s3.del.y,s3.del.z));
+    const showG=city&&!!c.m&&(c.help||c.solved||c.lvl===3);
+    setGuides(gP,c.m?c.m.P:pt(0,0,0),showG);setGuides(gQ,c.m?c.m.D:pt(0,0,0),showG);
+    if(reading) setRead3(s3.solved?s3.star:null);
+    else if(city){
+      const f=v=>Math.abs(v-Math.round(v))<0.05?String(Math.round(v)):v.toFixed(1);
+      setRead3(c.reveal&&c.pos?pt(f(c.pos.x),f(c.pos.y),f(c.pos.z)):null);
+    }
+    else setRead3(s3.d);
+  }
+  function retheme(){gridMat.color.set(cssv('--grid3'));rings.forEach(r=>r.material.color.set(cssv('--ink')));}
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{retheme();draw2d();});
+
+  function loop(now){
+    requestAnimationFrame(loop);
+    const dt=Math.min(0.05,Math.max(0,(now-lastT)/1000));lastT=now;
+    if(active!=='3') return;
+    stepFlight(dt);
+    if(tw){
+      const k=Math.min(1,(now-tw.t0)/600),e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      cam.th=tw.th+tw.dth*e;cam.ph=tw.ph+tw.dph*e;place();if(k>=1) tw=null;
+    }
+    if(!reduce){blades.forEach((b,i)=>{b.rotation.y+=(i%2?0.35:-0.35);});if(star.visible) star.rotation.y+=0.012;}
+    renderer.render(scene,camera);
+  }
+  T3={sync:sync,resize:resize,cityLoad:cityLoad,cityFly:cityFly,flying:()=>!!flight};
+  resize();sync();requestAnimationFrame(loop);
+}
+function sync3(){if(T3&&T3.sync) T3.sync();}
+
+['x','y','z'].forEach(a=>{
+  $('#'+a+'3').addEventListener('input',()=>{s3.d[a]=+$('#'+a+'3').value;sync3();if(s3.mode!=='read') setRead3(s3.d);});
+});
+
+function newDelivery(){
+  let p;
+  do{p={x:rnd(0,8),y:rnd(0,8),z:rnd(1,6)};}while(p.x===s3.d.x&&p.y===s3.d.y&&p.z===s3.d.z);
+  s3.del=p;s3.delDone=false;s3.shown=false;
+  $('#dtask').innerHTML='Deliver the parcel to (<span class="cx">'+p.x+'</span>, <span class="cy">'+p.y+'</span>, <span class="cz">'+p.z+'</span>)';
+  msg('#dmsg','','');sync3();
+}
+function drop(){
+  if(!s3.del||s3.delDone) return;
+  const t=s3.del,d=s3.d,h=[];
+  h.push(t.x>d.x?'x: go further along':t.x<d.x?'x: come back':'x is right');
+  h.push(t.y>d.y?'y: go further back':t.y<d.y?'y: come forward':'y is right');
+  h.push(t.z>d.z?'z: fly higher':t.z<d.z?'z: fly lower':'z is right');
+  if(t.x===d.x&&t.y===d.y&&t.z===d.z){
+    s3.delDone=true;
+    if(!s3.shown){s3.dscore++;$('#dscore').textContent=String(s3.dscore);}
+    msg('#dmsg','Delivered to ('+t.x+', '+t.y+', '+t.z+')! Press New delivery for the next one.','good');
+  } else msg('#dmsg','Not there yet. '+h.join('; ')+'.','try');
+  sync3();
+}
+$('#ddrop').addEventListener('click',drop);
+$('#dshow').addEventListener('click',()=>{if(!s3.del) return;s3.shown=true;msg('#dmsg','The green box shows the spot. Fly there and drop the parcel.','');sync3();});
+$('#dnew').addEventListener('click',newDelivery);
+
+function newStar(){
+  s3.star={x:rnd(0,8),y:rnd(0,8),z:rnd(0,6)};s3.solved=false;
+  ['#gx','#gy','#gz'].forEach(s=>{$(s).value='';});
+  msg('#gmsg','','');sync3();
+}
+function checkStar(){
+  if(!s3.star) return;
+  const vals=['#gx','#gy','#gz'].map(s=>$(s).value.trim());
+  if(vals.some(v=>v==='')){msg('#gmsg','Type a number in each box first.','try');return;}
+  const g={x:+vals[0],y:+vals[1],z:+vals[2]},t=s3.star;
+  const ok={x:g.x===t.x,y:g.y===t.y,z:g.z===t.z};
+  if(ok.x&&ok.y&&ok.z){
+    if(!s3.solved){s3.gscore++;$('#gscore').textContent=String(s3.gscore);}
+    s3.solved=true;msg('#gmsg','Correct! The star is at ('+t.x+', '+t.y+', '+t.z+').','good');
+  } else {
+    msg('#gmsg','x '+(ok.x?'\u2713':'\u2717')+', y '+(ok.y?'\u2713':'\u2717')+', z '+(ok.z?'\u2713':'\u2717')+'. Try a different view, or turn on the helper lines.','try');
+  }
+  sync3();
+}
+$('#gcheck').addEventListener('click',checkStar);
+$('#gnew').addEventListener('click',newStar);
+$('#ghelp').addEventListener('change',()=>{s3.help=$('#ghelp').checked;sync3();});
+
+
+/* ---------- city mission UI ---------- */
+const CTXT={
+  1:{hint:'A roof\u2019s z is the building\u2019s height: count the floor lines from the ground, or use the Front view. Use the Top view to read x and y.'},
+  2:{hint:'The drop D is a window on a wall, so its z is between the ground and the roof. Count the floor lines up to the window.'},
+  3:{hint:'Rules: each leg may change only one number (fly along x, y or z), and the drone must never fly through a building. Can you find the shortest safe route?'}
+};
+function cityMission(){const c=s3.city,list=MISSIONS[c.lvl];return list[c.idx[c.lvl]%list.length];}
+function fillNext(p){$('#nsx').value=p.x;$('#nsy').value=p.y;$('#nsz').value=p.z;}
+function renderStops(){
+  const c=s3.city;
+  $('#cstops').innerHTML=c.stops.map((p,i)=>{
+    if(i===0) return '<li>Start at P '+fmtXYZ(p)+'</li>';
+    const a=c.stops[i-1],k=['x','y','z'].find(q=>a[q]!==p[q]);
+    return '<li>'+fmtXYZ(p)+' <span class="leg">('+k+': '+a[k]+' \u2192 '+p[k]+')</span></li>';
+  }).join('');
+}
+function loadCity(){
+  const c=s3.city,m=cityMission();
+  c.m=m;c.solved=false;c.flying=false;c.reveal=c.lvl===3;c.stops=[Object.assign({},m.P)];c.pos=Object.assign({},m.P);
+  $$('[data-lvl]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.lvl===c.lvl)));
+  if(c.lvl===3) $('#ctask').textContent='Plan a safe route from the '+m.pName+' P '+fmtXYZ(m.P)+' to the '+m.dName+' D '+fmtXYZ(m.D)+'.';
+  else $('#ctask').textContent='Pick up the parcel at the '+m.pName+' (P) and deliver it to the '+m.dName+' (D). Read both addresses from the 3D graph.';
+  $('#chint').textContent=CTXT[c.lvl].hint;
+  $('#cread').hidden=c.lvl===3;$('#cplan').hidden=c.lvl!==3;
+  ['#cpx','#cpy','#cpz','#cdx','#cdy','#cdz'].forEach(q=>{$(q).value='';});
+  fillNext(m.P);renderStops();msg('#cmsg','','');$('#clog').innerHTML='';
+  if(T3&&T3.cityLoad) T3.cityLoad(m); else sync3();
+}
+function showLog(pts,extra){
+  const items=[];for(let i=1;i<pts.length;i++) items.push('<li>'+legText(pts[i-1],pts[i],i)+'</li>');
+  items.push('<li><strong>Total distance: '+routeLength(pts)+' units</strong></li>');
+  if(extra) items.push('<li>'+extra+'</li>');
+  $('#clog').innerHTML=items.join('');
+}
+function finishMission(text){const c=s3.city;c.flying=false;c.score++;$('#cscore').textContent=String(c.score);msg('#cmsg',text,'good');}
+function cityCheck(){
+  const c=s3.city,m=c.m;if(!m||c.flying||c.solved) return;
+  const ids=['#cpx','#cpy','#cpz','#cdx','#cdy','#cdz'],v=ids.map(q=>$(q).value.trim());
+  if(v.some(x=>x==='')){msg('#cmsg','Type a number in all six boxes first.','try');return;}
+  const gp=pt(+v[0],+v[1],+v[2]),gd=pt(+v[3],+v[4],+v[5]);
+  const mark=(g,t)=>['x','y','z'].map(k=>k+' '+(g[k]===t[k]?'\u2713':'\u2717')).join(', ');
+  const okP=same(gp,m.P),okD=same(gd,m.D);
+  if(okP&&okD){
+    c.solved=true;c.reveal=true;c.flying=true;sync3();
+    msg('#cmsg','Both addresses are correct. Launching the drone! Watch which number changes in the readout.','good');
+    const route=autoRoute(m);
+    const done=()=>{finishMission('Delivered! The drone flew '+routeLength(route)+' units. Each leg changed only one number.');showLog(route,'Think: could a different route be shorter? Try level 3.');};
+    if(T3&&T3.cityFly) T3.cityFly(route,done); else done();
+    return;
+  }
+  const wrong=[];['x','y','z'].forEach(k=>{if(gp[k]!==m.P[k]||gd[k]!==m.D[k]) wrong.push(k);});
+  let tip='';
+  if(wrong.includes('z')) tip+=' For z, count the floor lines from the ground up, or use the Front view.';
+  if(wrong.includes('x')||wrong.includes('y')) tip+=' For x and y, use the Top view and count grid lines from 0.';
+  msg('#cmsg','Pickup: '+mark(gp,m.P)+'. Drop: '+mark(gd,m.D)+'.'+tip,'try');
+}
+function readNext(){
+  const v=['#nsx','#nsy','#nsz'].map(q=>$(q).value.trim());
+  if(v.some(x=>x===''||isNaN(+x))) return null;
+  const p=pt(+v[0],+v[1],+v[2]);
+  if(['x','y','z'].some(k=>!Number.isInteger(p[k])||p[k]<0||p[k]>LIM)) return 'range';
+  return p;
+}
+function addStop(){
+  const c=s3.city;if(!c.m||c.flying) return;
+  const p=readNext();
+  if(p===null){msg('#cmsg','Type a number in each box for the next stop.','try');return;}
+  if(p==='range'){msg('#cmsg','Use whole numbers from 0 to 8.','try');return;}
+  const prev=c.stops[c.stops.length-1],prob=legProblem(prev,p);
+  if(prob){msg('#cmsg',prob,'try');return;}
+  c.stops.push(p);renderStops();fillNext(p);
+  msg('#cmsg',same(p,c.m.D)?'You reached D! Press Fly the route.':'Stop added. Change one number for the next stop.','');
+}
+function undoStop(){const c=s3.city;if(c.flying||c.stops.length<2) return;c.stops.pop();renderStops();fillNext(c.stops[c.stops.length-1]);msg('#cmsg','','');}
+function flyPlan(){
+  const c=s3.city,m=c.m;if(!m||c.flying||c.solved) return;
+  const last=c.stops[c.stops.length-1];
+  if(c.stops.length<2){msg('#cmsg','Add at least one stop first.','try');return;}
+  if(!same(last,m.D)){msg('#cmsg','Your route ends at '+fmtXYZ(last)+', but D is at '+fmtXYZ(m.D)+'. Add more stops.','try');return;}
+  const route=c.stops.slice(),dist=routeLength(route),best=shortest(m.P,m.D);
+  c.solved=true;c.flying=true;sync3();msg('#cmsg','Route accepted. Flying!','good');
+  const done=()=>{
+    const stars=dist<=best?3:dist<=best+4?2:1;
+    finishMission(stars===3?'Perfect! That is the shortest safe route ('+best+' units).':'Delivered safely in '+dist+' units. The shortest safe route is '+best+' units. Can you find it?');
+    showLog(route,'<span class="stars" aria-label="'+stars+' of 3 stars">'+'\u2605'.repeat(stars)+'\u2606'.repeat(3-stars)+'</span>');
+  };
+  if(T3&&T3.cityFly) T3.cityFly(route,done); else done();
+}
+$('#ccheck').addEventListener('click',cityCheck);
+$('#cadd').addEventListener('click',addStop);
+$('#cundo').addEventListener('click',undoStop);
+$('#cfly').addEventListener('click',flyPlan);
+$('#cretry').addEventListener('click',()=>{if(!s3.city.flying) loadCity();});
+$('#cnext').addEventListener('click',()=>{const c=s3.city;if(c.flying) return;c.idx[c.lvl]++;loadCity();});
+$('#chelp').addEventListener('change',()=>{s3.city.help=$('#chelp').checked;sync3();});
+$$('[data-lvl]').forEach(b=>b.addEventListener('click',()=>{const c=s3.city;if(c.flying) return;c.lvl=+b.dataset.lvl;loadCity();}));
+function setMode3(m){
+  if(s3.city.flying) return;
+  s3.mode=m;
+  $$('[data-m3]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m3===m)));
+  $('#m3-explore').hidden=m!=='explore';$('#m3-deliver').hidden=m!=='deliver';$('#m3-read').hidden=m!=='read';$('#m3-city').hidden=m!=='city';
+  $('#drone-controls').hidden=m==='read'||m==='city';
+  if(m==='deliver'&&!s3.del) newDelivery();
+  if(m==='read'&&!s3.star) newStar();
+  if(m==='city'&&!s3.city.m) loadCity();
+  sync3();
+  if(!(T3&&T3.cityLoad)){ if(m==='read') setRead3(s3.solved?s3.star:null); else if(m!=='city') setRead3(s3.d); }
+}
+$$('[data-m3]').forEach(b=>b.addEventListener('click',()=>setMode3(b.dataset.m3)));
+})();
+</script>
+</body>
+</html>
