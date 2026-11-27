@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Material Changes Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: warm, playful, one small thing at a time for 6–10 year olds; calm teacher notes on demand
+IDEA: a board-game journey — a path of stepping stones that unlock one by one
+PICTURE: the journey map, then one big card per screen (a diagram, a jar, a live glass of water)
+COLOUR and TYPE: turmeric-yellow ground, deep plum ink, tomato accent, leaf-green for "done"; Baloo 2 + Hind
+LAYOUT: phone-first single column, max 600px, sticky Back/Next bar at the bottom */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffc83d,#2a1f0a);--ink:light-dark(#2b1538,#f6ecd4);--soft:light-dark(#6a5a73,#c9b99a);
+--card:light-dark(#ffffff,#1d1424);--cink:light-dark(#2b1538,#f3eaf6);--line:light-dark(#eadfee,#3b2d45);
+--plum:light-dark(#4b2160,#d9b6ee);--onplum:light-dark(#ffffff,#1d1424);--tom:light-dark(#d93a26,#ff7a63);--ok:light-dark(#1f7a4a,#6fe0a2);
+--water:light-dark(#dff1fb,#17384a);--wdot:light-dark(#8cc8ea,#3d7fa3);--sugar:light-dark(#ffffff,#fff7e6);--glass:light-dark(#9fb6c4,#6b8899);
+--lock:light-dark(#e9c76a,#4a3a17)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 Hind,"Noto Sans Devanagari",system-ui,sans-serif;overflow-x:clip;min-height:100vh;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:"Baloo 2",Hind,sans-serif;line-height:1.1;text-wrap:balance;margin:0 0 .35em}
+h1{font-size:clamp(32px,8vw,46px);font-weight:800}
+h2{font-size:clamp(26px,6.5vw,34px);font-weight:800}
+h3{font-size:20px;font-weight:700}
+p{margin:.2em 0 .7em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--tom);outline-offset:2px}
+.hi2{display:block;font-size:.86em;opacity:.8;font-weight:inherit}
+.wrap{max-width:600px;margin:0 auto;padding:0 16px}
+/* header */
+.bar{display:flex;align-items:center;gap:8px;padding:10px 16px;max-width:600px;margin:0 auto}
+.bar .home{background:none;border:0;font:800 19px "Baloo 2",sans-serif;padding:6px 0;min-height:44px;margin-right:auto;text-align:left;line-height:1.1}
+.seg{display:flex;background:rgba(43,21,56,.12);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:6px 9px;border-radius:9px;font-weight:600;font-size:14px;min-height:38px}
+.seg button[aria-pressed=true]{background:var(--plum);color:var(--onplum)}
+.tbtn{border:2px solid currentColor;background:none;border-radius:12px;padding:6px 10px;font-weight:600;font-size:14px;min-height:42px}
+/* cards */
+.card{background:var(--card);color:var(--cink);border-radius:24px;padding:20px 18px;box-shadow:0 8px 0 rgba(43,21,56,.16);margin:8px 0 16px}
+.kicker{font:700 15px "Baloo 2",sans-serif;color:var(--tom);margin-bottom:2px}
+.big{font-size:19px}
+.words{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.words span{background:color-mix(in srgb,var(--plum) 12%,transparent);color:var(--plum);border-radius:99px;padding:4px 12px;font-weight:600;font-size:15px}
+.words b{display:block;font:800 13px "Baloo 2",sans-serif;width:100%;color:var(--soft)}
+/* options */
+.opts{display:grid;gap:10px;margin-top:14px}
+.opt{border:3px solid var(--line);background:var(--card);border-radius:16px;padding:12px 14px;min-height:56px;text-align:left;font-weight:600;font-size:18px;line-height:1.25}
+.opt:hover:not(:disabled){border-color:var(--plum)}
+.opt.r{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.w{border-color:var(--tom);background:color-mix(in srgb,var(--tom) 10%,var(--card));opacity:.75}
+.opt:disabled{cursor:default}
+.fb{margin-top:14px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--ok) 12%,transparent);font-size:17px}
+.fb.x{background:color-mix(in srgb,var(--tom) 10%,transparent)}
+.fb b{font-family:"Baloo 2",sans-serif;font-size:19px}
+.count{font:700 15px "Baloo 2",sans-serif;color:var(--soft)}
+.pbar{height:8px;border-radius:9px;background:var(--line);overflow:hidden;margin:6px 0 14px}.pbar i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.inline{border:0;background:var(--plum);color:var(--onplum);border-radius:14px;padding:10px 18px;min-height:48px;font-weight:700;margin-top:12px}
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:2px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:4}
+.nav .wrap{display:flex;gap:10px;padding:0}
+.nav button{min-height:54px;border-radius:16px;font:800 19px "Baloo 2",sans-serif;padding:4px 16px;line-height:1.1}
+.nav .back{border:2px solid var(--line);background:none;color:var(--cink)}
+.nav .next{flex:1;border:0;background:var(--tom);color:#fff}
+.nav .next:disabled{background:var(--line);color:var(--soft);cursor:not-allowed}
+.nav .hint{font-size:13px;font-family:Hind,sans-serif;font-weight:500;display:block}
+/* map */
+.map{list-style:none;margin:10px 0 0;padding:0;position:relative}
+.map:before{content:"";position:absolute;left:33px;top:30px;bottom:30px;border-left:6px dotted rgba(43,21,56,.3)}
+.map li{position:relative;margin:0 0 14px}
+.stone{display:flex;align-items:center;gap:14px;width:100%;border:0;background:var(--card);color:var(--cink);border-radius:22px;padding:12px 14px 12px 10px;text-align:left;box-shadow:0 6px 0 rgba(43,21,56,.14);min-height:76px}
+.stone .n{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font:800 22px "Baloo 2",sans-serif;background:var(--plum);color:var(--onplum)}
+.stone.done .n{background:var(--ok);color:var(--card)}
+.stone.locked{background:var(--lock);color:var(--soft);box-shadow:none;cursor:not-allowed}
+.stone.locked .n{background:rgba(0,0,0,.12);color:var(--soft)}
+.stone.now{outline:4px solid var(--tom);outline-offset:2px}
+.stone .t{font:700 19px "Baloo 2",sans-serif;line-height:1.15}
+.stone small{display:block;font-size:14px;color:var(--soft)}
+@media(prefers-reduced-motion:no-preference){.stone.now .n{animation:pop 1.6s ease-in-out infinite}@keyframes pop{50%{transform:scale(1.1)}}}
+/* welcome */
+.langpick{display:grid;gap:12px;margin-top:16px}
+.langpick button{border:0;border-radius:18px;background:var(--plum);color:var(--onplum);min-height:64px;font:800 22px "Baloo 2",Hind,sans-serif}
+/* figures */
+svg.flow{width:100%;height:auto;display:block}
+.flow text{font:700 15px "Baloo 2",Hind,sans-serif;fill:currentColor}
+.jars{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;font:700 16px "Baloo 2",Hind,sans-serif}
+.jars svg,.jar1 svg{width:100%;max-width:170px;height:auto;display:block;margin:0 auto}
+.jar1{text-align:center;margin-top:10px;font:700 17px "Baloo 2",Hind,sans-serif}
+.eq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:12px 0;font:800 20px "Baloo 2",Hind,sans-serif;text-align:center}
+.eq span{background:color-mix(in srgb,var(--plum) 10%,transparent);border-radius:16px;padding:10px 12px;line-height:1.15}
+.eq span small{display:block;font:600 14px Hind,sans-serif;color:var(--tom)}
+.meth{display:grid;gap:10px;margin-top:6px}
+.meth div{display:flex;gap:12px;align-items:center;background:color-mix(in srgb,var(--plum) 7%,transparent);border-radius:16px;padding:10px 12px}
+.meth svg{flex:none;width:52px;height:52px}
+.bubble{background:color-mix(in srgb,var(--tom) 10%,transparent);border-radius:18px;padding:12px 14px;margin:8px 0;position:relative;font-size:18px}
+.bubble b{font-family:"Baloo 2",sans-serif}
+/* lab */
+.fig{position:relative;height:250px;border-radius:18px;background:color-mix(in srgb,var(--plum) 5%,transparent);overflow:hidden}
+.fig canvas{position:absolute;inset:0;width:100%;height:100%}
+.timer{position:absolute;top:8px;left:12px;font:800 30px "Baloo 2",sans-serif;color:var(--plum);z-index:1;line-height:1}
+.timer small{display:block;font:500 12px Hind,sans-serif;color:var(--soft)}
+.ctl{display:grid;gap:10px;margin-top:12px}
+.ctl .lab{font:700 15px "Baloo 2",Hind,sans-serif;margin-bottom:4px}
+.tg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.tg button{border:2px solid var(--line);background:none;border-radius:12px;min-height:46px;font-weight:600;font-size:15px;padding:4px 6px;line-height:1.15}
+.tg button[aria-pressed=true]{background:var(--plum);border-color:var(--plum);color:var(--onplum)}
+.go{width:100%;border:0;background:var(--tom);color:#fff;border-radius:14px;min-height:52px;font:800 19px "Baloo 2",sans-serif;margin-top:4px}
+.go:disabled{opacity:.45;cursor:not-allowed}
+.check{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}
+.check li{display:flex;gap:10px;align-items:center;font-weight:600}
+.check li i{flex:none;width:26px;height:26px;border-radius:8px;border:3px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:16px}
+.check li.y i{background:var(--ok);border-color:var(--ok);color:var(--card)}
+.log{font-size:15px;margin-top:10px;color:var(--soft)}
+.log div{padding:4px 0;border-top:1px solid var(--line)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--soft);margin-top:8px}
+.legend i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
+/* celebration */
+.star{width:150px;height:150px;display:block;margin:4px auto 8px}
+/* teacher sheet */
+.sheet{position:fixed;inset:0;z-index:10;background:rgba(20,10,25,.55);display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .in{background:var(--card);color:var(--cink);width:100%;max-width:680px;max-height:88vh;overflow:auto;border-radius:24px 24px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom));font-size:16px}
+.sheet .top{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-18px;background:var(--card);padding:6px 0 8px;margin-top:-6px}
+.sheet .x{border:2px solid var(--line);background:none;border-radius:12px;min-height:44px;padding:4px 14px;font-weight:700}
+.sheet ul{padding-left:1.2em;margin:.3em 0 .9em}.sheet li{margin:.3em 0}
+.sheet details{border:2px solid var(--line);border-radius:14px;padding:0 14px;margin:8px 0}
+.sheet summary{font:700 18px "Baloo 2",sans-serif;padding:10px 0;min-height:44px;cursor:pointer}
+.say{display:block;background:color-mix(in srgb,#ffc83d 40%,transparent);border-radius:10px;padding:6px 10px;margin:.3em 0}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tools button{border:2px solid var(--line);background:none;border-radius:12px;min-height:44px;padding:4px 12px;font-weight:600}
+.tnote{background:color-mix(in srgb,var(--tom) 8%,transparent);border-left:5px solid var(--tom);border-radius:0 12px 12px 0;padding:10px 12px;margin:10px 0}
+@media(max-width:380px){.bar .home small{display:none}.seg button{padding:6px 7px}}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 20px}
+.tile{border:0;border-radius:22px;padding:14px;min-height:128px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 0 rgba(43,21,56,.16);font:800 21px "Baloo 2",Hind,sans-serif;line-height:1.1}
+.tile.n{background:var(--plum);color:var(--onplum)}.tile.a{background:var(--card);color:var(--cink)}
+.tile svg{width:46px;height:46px}.tile small{font:500 14px Hind,sans-serif;opacity:.85;line-height:1.3}
+.nlist{display:grid;gap:10px;margin-top:10px}
+.nitem{display:flex;gap:12px;align-items:center;border:0;background:var(--card);color:var(--cink);border-radius:18px;padding:10px 12px;text-align:left;min-height:76px;box-shadow:0 5px 0 rgba(43,21,56,.12)}
+.nitem svg{flex:none;width:64px;height:56px;border-radius:14px;background:color-mix(in srgb,var(--plum) 8%,transparent)}
+.pic{background:color-mix(in srgb,var(--plum) 6%,transparent);border-radius:18px;padding:12px;margin:10px 0 14px}
+.pic svg{width:100%;height:auto;display:block}
+.lbl{font:700 14px "Baloo 2",Hind,sans-serif;fill:currentColor}
+.bagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:8px 0}
+.ba{background:color-mix(in srgb,var(--plum) 6%,transparent);border-radius:16px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.ba svg{width:100%;max-width:140px;height:auto}.ba .nm{font:700 17px "Baloo 2",Hind,sans-serif;line-height:1.15}.ba .st{font-size:15px;min-height:2.6em;line-height:1.3}
+.ba .inline{margin-top:auto}
+.sm{min-height:44px;padding:6px 14px;margin-top:6px;font-size:16px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.remember{background:color-mix(in srgb,var(--ok) 13%,transparent);border-radius:16px;padding:12px 14px;margin:14px 0}
+.remember ul{margin:.2em 0 0;padding-left:1.2em}.remember li{margin:.25em 0}
+.athome{background:color-mix(in srgb,#ffc83d 38%,transparent);border-radius:16px;padding:12px 14px;margin:14px 0}
+details.think{border:3px dashed var(--plum);border-radius:16px;padding:0 14px;margin:14px 0}
+details.think summary{font:700 18px "Baloo 2",Hind,sans-serif;padding:12px 0;cursor:pointer;min-height:44px;line-height:1.25}
+.anim .mv{transition:transform 1.4s cubic-bezier(.5,0,.5,1),opacity .3s}.anim.run .mv{transform:translate(var(--dx,0px),var(--dy,0px));opacity:1}
+.anim .grow{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform 2s .8s}.anim.run .grow{transform:scaleY(1)}
+.anim .fade{transition:opacity 2s .4s}.anim.run .fade{opacity:0}
+.anim.run .shake{animation:shk .25s 5}@keyframes shk{50%{transform:translateX(5px)}}
+@media(prefers-reduced-motion:reduce){.anim .mv,.anim .grow,.anim .fade{transition-duration:.01s!important;transition-delay:0s!important}.anim.run .shake{animation:none}}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-bottom:6px}
+.tabs button{border:2px solid var(--line);background:none;border-radius:12px;min-height:46px;font-weight:700;font-size:16px;line-height:1.15}
+.tabs button[aria-pressed=true]{background:var(--plum);border-color:var(--plum);color:var(--onplum)}
+.race{margin:10px 0;background:color-mix(in srgb,var(--plum) 6%,transparent);border-radius:16px;padding:12px}
+.race h3{margin:0 0 4px}
+.lane{display:grid;grid-template-columns:7em minmax(0,1fr);gap:8px;align-items:center;margin:6px 0;font-size:15px;font-weight:600;line-height:1.2}
+.track{height:22px;border-radius:11px;background:var(--line);overflow:hidden}.track i{display:block;height:100%;width:0;border-radius:11px}
+.gas{display:flex;height:36px;border-radius:12px;overflow:hidden;margin:8px 0 2px;font-size:13px;font-weight:700;color:#fff}
+.gas span{display:grid;place-items:center;white-space:nowrap;overflow:hidden}
+input[type=range]{width:100%;height:44px;accent-color:var(--tom)}
+.facts{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.fact{background:color-mix(in srgb,var(--plum) 6%,transparent);border-radius:16px;padding:10px 12px;display:flex;gap:12px;align-items:center;font-size:15px;line-height:1.4}
+.fact svg{flex:none;width:60px;height:60px}
+.readmore{width:100%;margin:-4px 0 14px}
+.tiles .wide{grid-column:1/-1;min-height:96px;flex-direction:row;align-items:center;gap:14px;background:#2b1538;color:#ffe7a8}
+.send{border:3px solid #25a35a}.go.wa{display:flex;align-items:center;justify-content:center;text-decoration:none;background:#1f8f4e;margin:6px 0 8px}
+.tiles .wide span{display:flex;flex-direction:column;gap:4px}
+.need{padding-left:1.2em;margin:.2em 0 .8em}.need li{margin:.2em 0}
+.fld{display:block;margin:12px 0}.fld>span{display:block;font:700 16px "Baloo 2",Hind,sans-serif;margin-bottom:4px;line-height:1.25}
+.fld textarea,.fld input{width:100%;font:16px Hind,sans-serif;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--cink)}
+.fld textarea:focus,.fld input:focus{outline:3px solid var(--tom);outline-offset:1px}
+.check.big2 li{display:block}.check.big2 button{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:2px solid var(--line);background:none;border-radius:14px;padding:10px 12px;min-height:52px;font-size:17px;font-weight:500;line-height:1.35}
+.check.big2 li.y button{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.check.big2 i{margin-top:1px}
+.upl{display:flex;align-items:center;justify-content:center;min-height:56px;border:3px dashed var(--plum);border-radius:16px;font:700 18px "Baloo 2",Hind,sans-serif;color:var(--plum);cursor:pointer;margin:8px 0}
+.upl input{position:absolute;width:1px;height:1px;opacity:0}
+.upl:focus-within{outline:3px solid var(--tom)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.thumbs div{position:relative}.thumbs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;display:block}
+.thumbs button{position:absolute;top:4px;right:4px;width:32px;height:32px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:20px;line-height:1}
+.pad{position:relative;height:240px;border:2px solid var(--line);border-radius:16px;overflow:hidden;margin:8px 0;background:#fff}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.dot{width:44px;height:44px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 2px var(--line)}
+.labcard{width:100%;max-width:360px;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.memo{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.memo img{width:84px;height:84px;object-fit:cover;border-radius:14px;flex:none}
+.memo>div,.memo h3,.memo .fb,.memo p,.memo .btns,.memo .kicker{flex-basis:100%}
+.memo.mine{background:color-mix(in srgb,#ffc83d 35%,transparent);border-radius:16px;padding:10px 12px;margin-bottom:14px;flex-wrap:nowrap}
+.memo.mine>div{flex-basis:auto;font-size:15px}
+.card.memo{border:4px solid var(--tom)}
+.namein{width:100%;font:20px Hind,sans-serif;padding:12px 14px;border:3px solid var(--line);border-radius:14px;margin:10px 0;background:var(--card);color:var(--cink)}
+.send.off{border-color:var(--line)}
+.csqh{display:flex;gap:10px;align-items:center;margin-top:16px}.csqh span{flex:none;width:30px;height:30px;border-radius:50%;background:var(--tom);color:#fff;display:grid;place-items:center;font-size:17px}
+.bubble.sci{background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.mine2{background:color-mix(in srgb,#ffc83d 35%,transparent);border-radius:14px;padding:10px 12px;line-height:1.5}
+.tg.ag{grid-auto-flow:row;grid-template-columns:1fr}
+.fair{width:100%;border:2px solid var(--plum);background:none;border-radius:12px;min-height:46px;font-weight:700;font-size:15px;padding:6px 10px;margin:4px 0 10px;color:var(--plum);line-height:1.25}.fair[aria-pressed=true]{background:var(--plum);color:var(--onplum)}
+</style>
+</head>
+<body>
+<div class="bar">
+ <button class="home" id="home">Material Changes<small style="display:block;font:500 13px Hind,sans-serif">मटीरियल चेंजेस · map</small></button>
+ <div class="seg" id="lang" role="group" aria-label="Language"><button data-l="en">EN</button><button data-l="hi">हिं</button><button data-l="both">दोनों</button></div>
+ </div>
+<div class="wrap" id="main"></div>
+<div class="nav" id="nav"><div class="wrap"><button class="back" id="back">←</button><button class="next" id="next"></button></div></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Teacher notes"><div class="in" id="sheetIn"></div></div>
+<footer class="wrap" style="font-size:13px;color:var(--soft);padding-bottom:12px">Based on Cambridge Primary Science Stage 6, Unit 3 · Material changes.</footer>
+
+<script>
+{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const S={lang:null,done:0,all:false};
+try{Object.assign(S,JSON.parse(localStorage.getItem('mc2')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('mc2',JSON.stringify(S))}catch(e){}};
+const L=(en,hi)=>S.lang==='hi'?hi:S.lang==='both'?`${en}<span class="hi2">${hi}</span>`:en;
+const LA=a=>L(a[0],a[1]);
+let view={s:-1,p:0},cleanup=null,pageOk={};
+
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---------- pictures ---------- */
+function jar(kind,c){
+ c=c||'#ffffff';let fill='var(--water)',extra='',op=1;
+ if(kind==='clear'&&c!=='#ffffff'){fill=c;op=.5}
+ if(kind==='cloudy'){let d='';for(let i=0;i<24;i++)d+=`<circle cx="${40+((i*37)%110)}" cy="${72+((i*53)%86)}" r="2.8" fill="${c}" stroke="#0003" stroke-width=".6"/>`;
+  extra=`<rect x="31" y="56" width="128" height="122" fill="${c}" opacity=".3"/>${d}<path d="M31 162q32 -8 64 0t64 0v16h-128z" fill="${c}" stroke="#0003"/>`}
+ return `<svg viewBox="0 0 190 196" aria-hidden="true"><rect x="31" y="50" width="128" height="128" fill="${fill}" opacity="${op}"/>${extra}<path d="M27 30v148q0 12 12 12h112q12 0 12-12V30" fill="none" stroke="var(--glass)" stroke-width="5"/><rect x="20" y="20" width="150" height="12" rx="5" fill="var(--glass)"/></svg>`;
+}
+const flowSVG=()=>`<svg class="flow" viewBox="0 0 400 250" role="img" aria-label="Ice to water and back; wood to carbon with no way back">
+ <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+ <rect x="14" y="14" width="80" height="62" rx="12" fill="#cfeaf8" stroke="#6aaed6" stroke-width="3"/><path d="M28 30h26M28 42h44" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+ <path d="M306 30q20 -16 40 0t40 0v46h-80z" fill="#8cc8ea"/><rect x="306" y="14" width="80" height="62" rx="12" fill="none" stroke="#6aaed6" stroke-width="3"/>
+ <text x="54" y="98" text-anchor="middle">${S.lang==='hi'?'बर्फ़':'ice'}</text><text x="346" y="98" text-anchor="middle">${S.lang==='hi'?'पानी':'water'}</text>
+ <path d="M104 36H294" stroke="#d93a26" stroke-width="4" marker-end="url(#ah)"/><text x="200" y="28" text-anchor="middle" style="fill:#d93a26">${S.lang==='hi'?'गर्मी':'heat'}</text>
+ <path d="M294 62H104" stroke="#3d7fa3" stroke-width="4" marker-end="url(#ah)"/><text x="200" y="84" text-anchor="middle" style="fill:#3d7fa3">${S.lang==='hi'?'ठंडा करो':'cool'}</text>
+ <rect x="14" y="150" width="80" height="20" rx="6" fill="#c98a4b"/><circle cx="90" cy="160" r="12" fill="#d93a26"/>
+ <rect x="306" y="150" width="80" height="20" rx="6" fill="#2a2a2a"/>
+ <text x="54" y="196" text-anchor="middle">${S.lang==='hi'?'लकड़ी':'wood'}</text><text x="346" y="196" text-anchor="middle">${S.lang==='hi'?'कार्बन':'carbon'}</text>
+ <path d="M112 160H294" stroke="currentColor" stroke-width="4" marker-end="url(#ah)"/><text x="200" y="148" text-anchor="middle">${S.lang==='hi'?'जलाना':'burn'}</text>
+ <text x="200" y="186" text-anchor="middle" style="fill:#d93a26">${S.lang==='hi'?'वापस नहीं!':'no way back!'}</text>
+ <text x="200" y="124" text-anchor="middle" style="fill:#1f7a4a">${S.lang==='hi'?'रिवर्सिबल ↺':'reversible ↺'}</text>
+ <text x="200" y="232" text-anchor="middle" style="fill:#d93a26">${S.lang==='hi'?'इरिवर्सिबल ✗':'irreversible ✗'}</text></svg>`;
+const icoHand=`<svg viewBox="0 0 52 52"><circle cx="14" cy="38" r="7" fill="#c98a4b"/><circle cx="34" cy="40" r="6" fill="#7a3b5a"/><path d="M22 6c3 0 4 2 4 4v12l2-9c1-3 6-2 5 1l-2 11 3-6c1-3 6-1 5 2l-6 13c-2 4-6 6-11 6-6 0-9-4-9-9V12c0-4 6-4 6 0v8V10c0-3 1-4 3-4z" fill="#f2c9a0" stroke="#6a4a3a" stroke-width="2"/></svg>`;
+const icoSieve=`<svg viewBox="0 0 52 52"><ellipse cx="26" cy="18" rx="20" ry="6" fill="none" stroke="#6b8899" stroke-width="3"/><path d="M6 18q20 26 40 0" fill="#dfe8ee" stroke="#6b8899" stroke-width="3"/><path d="M14 22l3 3M22 24l2 4M30 24l-2 4M38 22l-3 3" stroke="#6b8899" stroke-width="2"/><circle cx="20" cy="42" r="2" fill="#e5cf9f"/><circle cx="28" cy="46" r="2" fill="#e5cf9f"/><circle cx="33" cy="40" r="2" fill="#e5cf9f"/><circle cx="22" cy="15" r="4" fill="#5c8a3c"/><circle cx="31" cy="16" r="4" fill="#5c8a3c"/></svg>`;
+const icoFilter=`<svg viewBox="0 0 52 52"><path d="M8 6h36L28 26v6h-4v-6z" fill="#fff" stroke="#6b8899" stroke-width="3" stroke-linejoin="round"/><path d="M14 10h24l-9 9h-6z" fill="#c99a55"/><path d="M26 34v4" stroke="#8cc8ea" stroke-width="3"/><rect x="14" y="38" width="24" height="12" rx="3" fill="#dff1fb" stroke="#6b8899" stroke-width="2"/></svg>`;
+
+/* ---------- one-at-a-time page ---------- */
+function seq(cfg){
+ return {html:()=>`<div class="card"><div class="kicker">${LA(cfg.k)}</div><div id="sq"></div></div>`,
+ mount(done){
+  let i=cfg.state.i||0;
+  const box=$('#sq');
+  const draw=()=>{
+   if(i>=cfg.items.length){box.innerHTML=cfg.end?cfg.end():`<h2>${L('All done!','सब हो गया!')}</h2><p class="big">${L('Press Next to go on.','आगे जाने के लिए Next दबाओ।')}</p>`;done();return}
+   const it=cfg.items[i];
+   box.innerHTML=`<div class="count">${i+1} / ${cfg.items.length}</div><div class="pbar"><i style="width:${i/cfg.items.length*100}%"></i></div>
+    ${it.pic?it.pic():''}<h2>${LA(it.q)}</h2><div class="opts">${it.o.map((o,j)=>`<button class="opt" data-j="${j}">${LA(o)}</button>`).join('')}</div><div id="fb"></div>`;
+   box.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+    const j=+b.dataset.j,right=j===it.a;
+    if(!right&&cfg.retry){b.classList.add('w');b.disabled=true;$('#fb').innerHTML=`<div class="fb x"><b>${L('Not quite — try again!','अभी नहीं — फिर से सोचो!')}</b> ${it.h?LA(it.h):''}</div>`;return}
+    if(right&&cfg.score)cfg.state.sc=(cfg.state.sc||0)+1;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===it.a)x.classList.add('r');else if(k===j)x.classList.add('w')});
+    const head=right?(cfg.predict?L('Your prediction was right!','तुम्हारा अनुमान सही था!'):L('Yes! Well done.','शाबाश! सही।')):(cfg.predict?L('Surprise! Now you know.','अरे! अब तुम जान गए।'):L('Not this time.','इस बार नहीं।'));
+    $('#fb').innerHTML=`${it.after?it.after():''}<div class="fb ${right?'':'x'}"><b>${head}</b> ${LA(it.f)}</div><button class="inline" id="nx">${i+1<cfg.items.length?L('Next card →','अगला कार्ड →'):L('Finish ✓','पूरा ✓')}</button>`;
+    $('#nx').addEventListener('click',()=>{i++;cfg.state.i=i;draw()});
+    $('#nx').focus({preventScroll:true});$('#fb').scrollIntoView({block:'nearest',behavior:'smooth'});
+   }));
+  };
+  draw();
+ }};
+}
+const learn=(fn)=>({html:fn,auto:true});
+
+/* ---------- data ---------- */
+const REV=[
+ [['Ice melts into water','बर्फ़ पिघलकर पानी बनती है'],1,['Put the water in the freezer and it becomes ice again.','पानी फ़्रीज़र में रखो, फिर से बर्फ़ बन जाता है।']],
+ [['A matchstick burns','माचिस की तीली जलती है'],0,['The wood turns into black carbon. A new substance forms.','लकड़ी काला कार्बन बन जाती है। नया सब्सटेंस बनता है।']],
+ [['Chocolate melts in your pocket','जेब में चॉकलेट पिघलती है'],1,['Put it in the fridge and it becomes solid again.','फ़्रिज में रखो, फिर से ठोस हो जाती है।']],
+ [['An egg is boiled','अंडा उबाला जाता है'],0,['The runny egg becomes solid. It can never be runny again.','पतला अंडा ठोस हो जाता है। फिर कभी पतला नहीं होगा।']],
+ [['Paper is folded into a plane','काग़ज़ से हवाई जहाज़ बनाया'],1,['Unfold it — the paper is flat again.','खोल दो — काग़ज़ फिर से सीधा।']],
+ [['Popcorn pops in a hot pan','गरम बर्तन में पॉपकॉर्न फूटता है'],0,['The kernel cannot become hard again.','दाना फिर से सख़्त नहीं बन सकता।']]
+].map(r=>({q:r[0],o:[['Can change back ↺','वापस बदल सकता है ↺'],['Cannot change back ✗','वापस नहीं बदल सकता ✗']],a:r[1]?0:1,f:r[2],h:['Ask: can I get the first thing back again?','सोचो: क्या पहली चीज़ वापस मिल सकती है?']}));
+const MO=[['Sort by hand','हाथ से छाँटो'],['Sieve','सीव (छलनी)'],['Filter','फ़िल्टर']];
+const MIX=[
+ [['Peanuts and raisins','मूँगफली और किशमिश'],0,['The pieces are big. You can see them and pick them out.','टुकड़े बड़े हैं। देखकर चुन सकते हो।']],
+ [['Stones and soil','पत्थर और मिट्टी'],1,['Soil falls through the holes. Stones stay on top.','मिट्टी छेदों से गिर जाती है। पत्थर ऊपर रह जाते हैं।']],
+ [['Sand and water','रेत और पानी'],2,['Water goes through the filter paper. The sand stays on it.','पानी फ़िल्टर पेपर से निकल जाता है। रेत ऊपर रह जाती है।']],
+ [['Peas and flour (atta)','मटर और आटा'],1,['Tiny flour bits fall through. Big peas stay in the sieve.','आटे के बारीक कण गिर जाते हैं। बड़े मटर छलनी में रहते हैं।']],
+ [['Chalk powder and water','चॉक पाउडर और पानी'],2,['The filter paper holds back the chalk.','फ़िल्टर पेपर चॉक को रोक लेता है।']]
+].map(r=>({q:r[0],o:MO,a:r[1],f:r[2],h:['Are the bits big or tiny? Is there water?','टुकड़े बड़े हैं या बहुत छोटे? पानी है क्या?']}));
+const SUB=[
+ [['Sugar','चीनी'],1,'#ffffff',['Sugar dissolves. The water stays clear but tastes sweet.','चीनी घुल जाती है। पानी साफ़ रहता है पर मीठा हो जाता है।']],
+ [['Sand','रेत'],0,'#c99a55',['Sand is insoluble. It sinks to the bottom.','रेत इनसॉल्यूबल है। नीचे बैठ जाती है।']],
+ [['Salt','नमक'],1,'#ffffff',['Salt dissolves. The water stays clear but tastes salty.','नमक घुल जाता है। पानी साफ़ पर नमकीन।']],
+ [['Atta (flour)','आटा'],0,'#e5cf9f',['Flour makes the water cloudy and slowly settles.','आटा पानी धुंधला करता है और धीरे-धीरे नीचे बैठता है।']],
+ [['Instant coffee','इंस्टेंट कॉफ़ी'],1,'#7a4424',['Coffee dissolves. The water turns brown, but you can see through it.','कॉफ़ी घुल जाती है। पानी भूरा होता है, पर आर-पार दिखता है।']],
+ [['Haldi (turmeric)','हल्दी'],0,'#f0a500',['Haldi colours the water, but most of it settles at the bottom. Colour does not mean dissolved!','हल्दी पानी को रंग देती है, पर ज़्यादातर नीचे बैठ जाती है। रंग का मतलब घुलना नहीं!']]
+].map(r=>({q:[`Put ${r[0][0].toLowerCase()} in water. Will it dissolve?`,`${r[0][1]} पानी में डालो। क्या घुलेगा?`],pic:()=>`<div class="jar1">${jar('empty')}</div>`,o:[['Yes, it will dissolve','हाँ, घुल जाएगा'],['No, it will not dissolve','नहीं, नहीं घुलेगा']],a:r[1]?0:1,f:r[3],
+  after:()=>`<div class="jar1">${jar(r[1]?'clear':'cloudy',r[2])}${r[1]?L('Clear → soluble','साफ़ → सॉल्यूबल'):L('Cloudy → insoluble','धुंधला → इनसॉल्यूबल')}</div>`}));
+const SOL=[
+ [['In sugar water, which one is the solute?','चीनी के पानी में सॉल्यूट कौन है?'],[['Sugar','चीनी'],['Water','पानी']],0,['Sugar dissolves, so sugar is the solute.','चीनी घुलती है, इसलिए चीनी सॉल्यूट है।']],
+ [['In salt water, which one is the solvent?','नमक के पानी में सॉल्वेंट कौन है?'],[['Salt','नमक'],['Water','पानी']],1,['Water is the liquid the salt dissolves in — the solvent.','पानी वह लिक्विड है जिसमें नमक घुलता है — सॉल्वेंट।']],
+ [['Which one is a solution?','इनमें सॉल्यूशन कौन सा है?'],[['Sand in water','पानी में रेत'],['Sugar in water','पानी में चीनी']],1,['Sugar dissolves fully. Sand does not — sand in water is a suspension.','चीनी पूरी घुलती है। रेत नहीं — पानी में रेत सस्पेंशन है।']],
+ [['Jelly powder is mixed with hot water. The jelly powder is the…','जेली पाउडर गरम पानी में मिलाया। जेली पाउडर है…'],[['solute','सॉल्यूट'],['solvent','सॉल्वेंट']],0,['The powder dissolves, so it is the solute.','पाउडर घुलता है, इसलिए वह सॉल्यूट है।']]
+].map(r=>({q:r[0],o:r[1],a:r[2],f:r[3],h:['Solute = what dissolves. Solvent = the liquid.','सॉल्यूट = जो घुलता है। सॉल्वेंट = लिक्विड।']}));
+const QZ=[
+ [['Sunil heats popcorn and it pops. This change is…','सुनील पॉपकॉर्न गरम करता है और वह फूटता है। यह चेंज है…'],[['reversible','रिवर्सिबल'],['irreversible','इरिवर्सिबल']],1,['It can never become a hard kernel again.','वह फिर कभी सख़्त दाना नहीं बन सकता।']],
+ [['How can you get stones out of soil?','मिट्टी से पत्थर कैसे निकालोगे?'],[['Filter','फ़िल्टर'],['Sieve','सीव (छलनी)']],1,['The sieve lets soil through and keeps stones.','छलनी मिट्टी निकाल देती है, पत्थर रोक लेती है।']],
+ [['Sand in water makes a…','पानी में रेत बनाती है…'],[['solution','सॉल्यूशन'],['suspension','सस्पेंशन']],1,['Sand does not dissolve, so it is a suspension.','रेत नहीं घुलती, इसलिए सस्पेंशन है।']],
+ [['Sugar dissolves faster in…','चीनी जल्दी घुलती है…'],[['cold water','ठंडे पानी में'],['hot water','गरम पानी में']],1,['Heat makes particles move faster.','गर्मी से पार्टिकल्स तेज़ चलते हैं।']],
+ [['Which dissolves fastest?','सबसे जल्दी क्या घुलेगा?'],[['A sugar cube','चीनी का टुकड़ा'],['Fine sugar powder','बारीक चीनी पाउडर']],1,['Small grains dissolve faster than big lumps.','छोटे दाने बड़े टुकड़ों से जल्दी घुलते हैं।']],
+ [['Can a filter take salt out of salty water?','क्या फ़िल्टर नमक वाले पानी से नमक निकाल सकता है?'],[['Yes','हाँ'],['No','नहीं']],1,['Dissolved salt is too tiny — it goes through. Dry the water in the sun instead.','घुला नमक बहुत छोटा है — निकल जाता है। पानी धूप में सुखाओ।']]
+].map(r=>({q:r[0],o:r[1],a:r[2],f:r[3]}));
+
+/* ---------- lab ---------- */
+function labPage(state){return{html:()=>`<div class="card">
+ <div class="kicker">${L('Try it yourself','ख़ुद करके देखो')}</div>
+ <h2>${L('The sugar lab','चीनी की लैब')}</h2>
+ <p>${L('Choose, predict, then press the button.','चुनो, अनुमान लगाओ, फिर बटन दबाओ।')}</p>
+ <button class="fair" id="fair"></button>
+ <div class="fig"><div class="timer"><span id="tm">0</span><small>${L('lab seconds','लैब सेकंड')}</small></div><canvas id="cv" aria-label="Glass of water with sugar"></canvas></div>
+ <div class="legend"><span><i style="background:var(--wdot);border-radius:50%"></i>${S.lang==='hi'?'पानी के पार्टिकल्स':'water particles'}</span><span><i style="background:var(--sugar);border:1.5px solid var(--plum)"></i>${S.lang==='hi'?'चीनी के पार्टिकल्स':'sugar particles'}</span></div>
+ <div class="ctl">
+  <div><div class="lab">${L('Water','पानी')}</div><div class="tg" data-k="hot"><button data-v="0">${L('Cold','ठंडा')}</button><button data-v="1">${L('Hot','गरम')}</button></div></div>
+  <div><div class="lab">${L('Stir?','हिलाना?')}</div><div class="tg" data-k="stir"><button data-v="0">${L('No','नहीं')}</button><button data-v="1">${L('Stir','हिलाओ')}</button></div></div>
+  <div><div class="lab">${L('Sugar','चीनी')}</div><div class="tg" data-k="grain"><button data-v="lump">${L('Lumps','टुकड़े')}</button><button data-v="fine">${L('Fine','बारीक')}</button></div></div>
+  <div><div class="lab" id="predl"></div><div class="tg" data-k="pred" id="predg"></div></div>
+  <button class="go" id="go">${L('Add sugar ▶','चीनी डालो ▶')}</button>
+ </div>
+ <div class="fb" id="lmsg" style="display:none"></div>
+ <h3 style="margin-top:16px">${L('Your mission','तुम्हारा मिशन')}</h3>
+ <ul class="check" id="ck"></ul>
+ <div class="log" id="log"></div>
+</div>`,
+mount(done){
+ const cv=$('#cv'),ctx=cv.getContext('2d');let W=0,H=0,col={},raf=0,frame=0;
+ const st=state.st||(state.st={hot:'0',stir:'0',grain:'lump',pred:null});
+ const run={running:false,done:false,ticks:0};state.log=state.log||[];state.got=state.got||{};
+ let clusters=[],free=[],water=[];
+ for(let i=0;i<42;i++)water.push({u:Math.random()*.94+.03,v:Math.random()*.85+.1,a:Math.random()*6.28});
+ const rc=()=>{const pr=document.createElement('i');document.body.appendChild(pr);['--wdot','--sugar','--plum','--glass','--soft','--water'].forEach(k=>{pr.style.color='var('+k+')';col[k]=getComputedStyle(pr).color||'#888'});pr.remove()};
+ const sz=()=>{const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;W=r.width;H=r.height;cv.width=Math.round(W*d);cv.height=Math.round(H*d);ctx.setTransform(d,0,0,d,0,0);rc()};
+ const ro=new ResizeObserver(sz);ro.observe(cv);const mq=matchMedia('(prefers-color-scheme: dark)');mq.addEventListener('change',rc);const mo=new MutationObserver(rc);mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+ const G=()=>{const gw=Math.min(W*.62,280),gh=H*.72;return{x:(W-gw)/2,y:H-gh-14,w:gw,h:gh}};
+ const GR={lump:[2,25],fine:[10,5]};
+ const fresh=()=>{const[n,k]=GR[st.grain];clusters=[];for(let c=0;c<n;c++)clusters.push({cx:(c+.5)/n,k,b:k});free=[];run.running=false;run.done=false;run.ticks=0;$('#tm').textContent='0';ui()};
+ const MIS=[['hot',L('Try hot water','गरम पानी आज़माओ')],['stir',L('Try stirring','हिलाकर देखो')],['fine',L('Try fine sugar','बारीक चीनी आज़माओ')],['fair',L('Do a fair test: change only one thing from your last run','फ़ेयर टेस्ट करो: पिछली बार से सिर्फ़ एक चीज़ बदलो')]];
+ if(state.fair===undefined)state.fair=true;
+ const VN={hot:['hot water','गरम पानी'],stir:['stirring','हिलाना'],grain:['sugar size','चीनी का साइज़']};
+ const diffs=(a,b)=>['hot','stir','grain'].filter(k=>a[k]!==b[k]);
+ const PO=()=>state.prev?[['faster',L('Faster than last time','पिछली बार से जल्दी')],['slower',L('Slower than last time','पिछली बार से धीरे')],['same',L('Same as last time','पिछली बार जितना')]]:[['fast',L('Fast','जल्दी')],['slow',L('Slow','धीरे')]];
+ const ui=()=>{
+  $$('.tg[data-k]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(st[g.dataset.k]===b.dataset.v))));
+  $('#predl').innerHTML=state.prev?L(`My prediction (last time: ${state.prev.t} s)`,`मेरा अनुमान (पिछली बार: ${state.prev.t} से.)`):L('My prediction','मेरा अनुमान');
+  $('#predg').innerHTML=PO().map(o=>`<button data-v="${o[0]}" aria-pressed="${st.pred===o[0]}">${o[1]}</button>`).join('');
+  const fb=$('#fair');fb.setAttribute('aria-pressed',String(state.fair));fb.innerHTML=state.fair?L('⚖ Fair test mode: ON — change only one thing each run','⚖ फ़ेयर टेस्ट मोड: चालू — हर बार सिर्फ़ एक चीज़ बदलो'):L('⚖ Fair test mode: OFF — tap to turn on','⚖ फ़ेयर टेस्ट मोड: बंद — चालू करने के लिए टैप करो');
+  const go=$('#go');go.disabled=run.running||!st.pred;
+  go.innerHTML=run.running?L('Dissolving…','घुल रही है…'):!st.pred?L('First choose your prediction','पहले अनुमान चुनो'):run.done?L('Run again ▶','फिर से चलाओ ▶'):L('Add sugar ▶','चीनी डालो ▶');
+  $('#ck').innerHTML=MIS.map(m=>`<li class="${state.got[m[0]]?'y':''}"><i>${state.got[m[0]]?'✓':''}</i>${m[1]}</li>`).join('');
+  $('#log').innerHTML=state.log.map(r=>`<div>${r}</div>`).join('');
+ };
+ $$('.tg[data-k]').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||run.running)return;const k=g.dataset.k;
+  if(k==='pred'){st.pred=b.dataset.v;ui();return}
+  if(st[k]===b.dataset.v)return;
+  const next=Object.assign({},st,{[k]:b.dataset.v}),m=$('#lmsg');
+  if(state.fair&&state.prev){const d=diffs(next,state.prev);if(d.length>1){const other=d.filter(x=>x!==k)[0];m.style.display='block';m.className='fb x';m.innerHTML=`<b>${L('Fair test!','फ़ेयर टेस्ट!')}</b> ${L(`You already changed <b>${VN[other][0]}</b>. Change only ONE thing, so you know what made the difference. Put ${VN[other][0]} back first.`,`तुमने पहले ही <b>${VN[other][1]}</b> बदल दिया है। सिर्फ़ एक चीज़ बदलो, ताकि पता चले फ़र्क किससे पड़ा। पहले ${VN[other][1]} वापस करो।`)}`;return}}
+  st[k]=b.dataset.v;st.pred=null;fresh();m.style.display='none'}));
+ $('#fair').addEventListener('click',()=>{if(run.running)return;state.fair=!state.fair;ui()});
+ $('#go').addEventListener('click',()=>{if(!st.pred||run.running)return;if(run.done){const p=st.pred;fresh();st.pred=p}run.running=true;$('#lmsg').style.display='none';ui()});
+ const finish=()=>{
+  const t=Math.round(run.ticks/6),pv=state.prev;let ok,res,why='';
+  if(!pv){const fast=t<45;ok=(st.pred==='fast')===fast;res=L(`It took ${t} lab seconds — ${fast?'fast':'slow'}.`,`${t} लैब सेकंड लगे — ${fast?'जल्दी':'धीरे'}।`)}
+  else{const out=t<pv.t*.85?'faster':t>pv.t*1.15?'slower':'same';ok=st.pred===out;
+   res=L(`Last time: ${pv.t} s. This time: ${t} s — ${out==='same'?'about the same':out}.`,`पिछली बार: ${pv.t} से.। इस बार: ${t} से. — ${out==='faster'?'जल्दी':out==='slower'?'धीरे':'लगभग बराबर'}।`);
+   const d=diffs(st,pv);
+   if(d.length===1){state.got.fair=1;why=L(`You changed only <b>${VN[d[0]][0]}</b>, so ${VN[d[0]][0]} made the difference. That is a fair test!`,`तुमने सिर्फ़ <b>${VN[d[0]][1]}</b> बदला, इसलिए फ़र्क ${VN[d[0]][1]} से पड़ा। यही फ़ेयर टेस्ट है!`)}
+   else if(d.length>1)why=L(`You changed ${d.length} things, so we cannot tell which one made the difference. Turn on fair test mode!`,`तुमने ${d.length} चीज़ें बदलीं, इसलिए पता नहीं चलता फ़र्क किससे पड़ा। फ़ेयर टेस्ट मोड चालू करो!`);
+   else why=L('You changed nothing, so the time should be about the same.','तुमने कुछ नहीं बदला, इसलिए समय लगभग बराबर होना चाहिए।')}
+  if(st.hot==='1')state.got.hot=1;if(st.stir==='1')state.got.stir=1;if(st.grain==='fine')state.got.fine=1;
+  const ch=pv?diffs(st,pv).map(k=>VN[k][S.lang==='hi'?1:0]).join(', '):'';
+  state.log.unshift(`${st.hot==='1'?L('Hot','गरम'):L('Cold','ठंडा')} · ${st.stir==='1'?L('stirred','हिलाया'):L('not stirred','नहीं हिलाया')} · ${st.grain==='fine'?L('fine','बारीक'):L('lumps','टुकड़े')} → <b>${t} s</b>${pv?` <small>(${ch?L('changed: ','बदला: ')+ch:L('nothing changed','कुछ नहीं बदला')})</small>`:''}`);
+  state.prev={hot:st.hot,stir:st.stir,grain:st.grain,t};st.pred=null;
+  const m=$('#lmsg');m.style.display='block';m.className='fb'+(ok?'':' x');
+  m.innerHTML=`<b>${ok?L('Your prediction was right!','अनुमान सही था!'):L('Surprise!','अरे वाह!')}</b> ${res} ${why} ${L('Now change one thing and predict again.','अब एक चीज़ बदलो और फिर अनुमान लगाओ।')}`;
+  ui();if(state.got.hot&&state.got.stir&&state.got.fine&&state.got.fair)done();
+ };
+ const step=()=>{
+  const g=G();
+  if(run.running){run.ticks++;const p=.03*(st.hot==='1'?2.5:1)*(st.stir==='1'?2.2:1);
+   for(const c of clusters){if(c.b>0&&Math.random()<p){c.b--;const s=Math.ceil(Math.sqrt(c.k)),cl=c.b%s,rw=Math.floor(c.b/s);free.push({u:(c.cx*g.w+(cl-(s-1)/2)*7)/g.w,v:(g.h-10-rw*7)/g.h,a:Math.random()*6.28})}}
+   if(run.ticks%6===0)$('#tm').textContent=Math.round(run.ticks/6);
+   if(clusters.every(c=>c.b===0)){run.running=false;run.done=true;$('#tm').textContent=Math.round(run.ticks/6);finish()}}
+  const sp=st.hot==='1'?.006:.0022,sw=(st.stir==='1'&&(run.running||run.done))?.018:0,asp=g.w/Math.max(g.h,1);
+  const mv=q=>{q.a+=(Math.random()-.5)*.9;q.u+=Math.cos(q.a)*sp;q.v+=Math.sin(q.a)*sp*asp;
+   if(sw){const dx=q.u-.5,dy=(q.v-.55)/asp;q.u+=-dy*sw;q.v+=dx*sw*asp}
+   if(q.u<.03){q.u=.03;q.a=Math.PI-q.a}if(q.u>.97){q.u=.97;q.a=Math.PI-q.a}if(q.v<.1){q.v=.1;q.a=-q.a}if(q.v>.97){q.v=.97;q.a=-q.a}};
+  water.forEach(mv);free.forEach(mv);
+ };
+ const draw=()=>{
+  if(!W)return;const g=G();frame++;ctx.clearRect(0,0,W,H);const top=g.y+g.h*.08;
+  ctx.fillStyle=col['--water'];ctx.fillRect(g.x,top,g.w,g.y+g.h-top);
+  if(st.hot==='1'){ctx.strokeStyle=col['--soft'];ctx.lineWidth=2.5;ctx.globalAlpha=.55;for(let i=0;i<3;i++){const x=g.x+g.w*(.3+i*.2);ctx.beginPath();for(let y=0;y<36;y+=3){const xx=x+Math.sin((y+frame*.6+i*20)/7)*5;y?ctx.lineTo(xx,g.y-4-y):ctx.moveTo(xx,g.y-4-y)}ctx.stroke()}ctx.globalAlpha=1}
+  ctx.fillStyle=col['--wdot'];for(const q of water){ctx.beginPath();ctx.arc(g.x+q.u*g.w,g.y+q.v*g.h,3,0,6.29);ctx.fill()}
+  ctx.fillStyle=col['--sugar'];ctx.strokeStyle=col['--plum'];ctx.lineWidth=1.4;
+  for(const q of free){const x=g.x+q.u*g.w-2.5,y=g.y+q.v*g.h-2.5;ctx.fillRect(x,y,5,5);ctx.strokeRect(x,y,5,5)}
+  for(const c of clusters){const s=Math.ceil(Math.sqrt(c.k));for(let i=0;i<c.b;i++){const cl=i%s,rw=Math.floor(i/s),x=g.x+c.cx*g.w+(cl-(s-1)/2)*7-3,y=g.y+g.h-10-rw*7-3;ctx.fillRect(x,y,6,6);ctx.strokeRect(x,y,6,6)}}
+  if(st.stir==='1'&&(run.running||run.done)){const a=frame*.08,cx=g.x+g.w/2+Math.cos(a)*g.w*.22;ctx.strokeStyle=col['--soft'];ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(cx+16,g.y-26);ctx.lineTo(cx,g.y+g.h*.7);ctx.stroke();ctx.lineCap='butt'}
+  ctx.strokeStyle=col['--glass'];ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(g.x-4,g.y);ctx.lineTo(g.x-4,g.y+g.h+4);ctx.lineTo(g.x+g.w+4,g.y+g.h+4);ctx.lineTo(g.x+g.w+4,g.y);ctx.stroke();
+ };
+ const loop=()=>{step();draw();raf=requestAnimationFrame(loop)};
+ fresh();raf=requestAnimationFrame(loop);
+ if(state.got.hot&&state.got.stir&&state.got.fine&&state.got.fair)done();
+ return()=>{cancelAnimationFrame(raf);ro.disconnect();mo.disconnect();mq.removeEventListener('change',rc)};
+}}}
+
+
+/* ---------- Granny's coffee: claim, support, question ---------- */
+const CSQ={claim:[['Granny is right — the boy forgot the sugar.','दादी सही हैं — लड़का चीनी भूल गया।'],['The boy is right — he did put sugar in.','लड़का सही है — उसने चीनी डाली थी।'],['They could both be right.','दोनों सही हो सकते हैं।']],
+ sup:[['The coffee does not taste sweet.','कॉफ़ी मीठी नहीं लग रही।'],['He says he put in two lumps.','वह कहता है उसने दो टुकड़े डाले।'],['Maybe the sugar is there but has not dissolved yet.','शायद चीनी है, पर अभी घुली नहीं।']],
+ q:[['Does stirring make sugar dissolve faster?','क्या हिलाने से चीनी जल्दी घुलती है?'],['Does hot coffee dissolve sugar faster than cold?','क्या गरम कॉफ़ी में चीनी ठंडी से जल्दी घुलती है?'],['Do lumps dissolve slower than fine sugar?','क्या टुकड़े बारीक चीनी से धीरे घुलते हैं?']]};
+const csqOk=()=>{const c=S.csq||{};return c.claim!==undefined&&c.sup!==undefined&&(c.q!==undefined||(c.qown||'').trim().length>3)};
+const csqOpts=(k,arr)=>`<div class="opts">${arr.map((o,j)=>`<button class="opt ${(S.csq||{})[k]===j?'r':''}" data-cs="${k}:${j}">${LA(o)}</button>`).join('')}</div>`;
+function csqPage(){return{html:()=>{const c=S.csq||{};return `<div class="card" id="csq"><div class="kicker">${L('Claim · Support · Question','दावा · सबूत · सवाल')}</div><h2>${L("Granny's coffee",'दादी की कॉफ़ी')}</h2>
+ <div class="bubble"><b>${L('Granny:','दादी:')}</b> ${L('"You forgot the sugar! My coffee is not sweet."','"तुम चीनी भूल गए! कॉफ़ी मीठी नहीं है।"')}</div>
+ <div class="bubble"><b>${L('Boy:','लड़का:')}</b> ${L('"No Granny, I put in two lumps of sugar!"','"नहीं दादी, मैंने चीनी के दो टुकड़े डाले थे!"')}</div>
+ <h3 class="csqh"><span>1</span>${L('Claim: who do you agree with?','दावा: तुम किससे सहमत हो?')}</h3>${csqOpts('claim',CSQ.claim)}
+ ${c.claim!==undefined?`<h3 class="csqh"><span>2</span>${L('Support: what makes you think so?','सबूत: तुम्हें ऐसा क्यों लगता है?')}</h3>${csqOpts('sup',CSQ.sup)}`:''}
+ ${c.sup!==undefined?`<h3 class="csqh"><span>3</span>${L('Question: what should we test in the lab?','सवाल: लैब में क्या टेस्ट करें?')}</h3>${csqOpts('q',CSQ.q)}<label class="fld"><span>${L('…or write your own question','…या अपना सवाल लिखो')}</span><textarea id="qown" rows="2">${esc(c.qown)}</textarea></label>`:''}
+ <div id="csqdone">${csqOk()?csqSecret():''}</div></div>`},
+ mount(done){const box=$('#csq');if(csqOk())done();
+  box.addEventListener('click',e=>{const b=e.target.closest('[data-cs]');if(!b)return;const[k,j]=b.dataset.cs.split(':');S.csq=S.csq||{};const first=S.csq[k]===undefined;S.csq[k]=+j;save();
+   if(first&&k!=='q'){const y=scrollY;render();scrollTo(0,y)}else{box.querySelectorAll(`[data-cs^="${k}:"]`).forEach(x=>x.classList.toggle('r',x===b));$('#csqdone').innerHTML=csqOk()?csqSecret():'';if(csqOk())done()}});
+  const t=$('#qown');if(t)t.addEventListener('input',()=>{S.csq.qown=t.value;save();$('#csqdone').innerHTML=csqOk()?csqSecret():'';if(csqOk())done()});
+ }}}
+const csqSecret=()=>`<div class="athome" style="margin-top:14px"><h3>${L('Keep it a mystery!','अभी राज़ रखो!')}</h3>${L('We will not say who is right yet. Write your <b>claim</b>, <b>support</b> and <b>question</b> in your science notebook. Then test it in the lab.','अभी नहीं बताएँगे कि कौन सही है। अपना <b>दावा</b>, <b>सबूत</b> और <b>सवाल</b> अपनी साइंस कॉपी में लिखो। फिर लैब में टेस्ट करो।')}</div>`;
+function csqAfter(){return{html:()=>{const c=S.csq||{};return `<div class="card" id="csqa"><div class="kicker">${L('Back to Granny’s coffee','दादी की कॉफ़ी पर वापस')}</div><h2>${L('Now we know!','अब हमें पता है!')}</h2>
+ <div class="mine2"><b>${L('Your claim:','तुम्हारा दावा:')}</b> ${c.claim!==undefined?LA(CSQ.claim[c.claim]):'—'}<br><b>${L('Your support:','तुम्हारा सबूत:')}</b> ${c.sup!==undefined?LA(CSQ.sup[c.sup]):'—'}<br><b>${L('Your question:','तुम्हारा सवाल:')}</b> ${c.qown&&c.qown.trim()?esc(c.qown):c.q!==undefined?LA(CSQ.q[c.q]):'—'}</div>
+ <p class="big" style="margin-top:12px">${L('<b>They were both right!</b> The boy did put sugar in. But the lumps sat at the bottom without dissolving, so Granny could not taste them. The lab showed us what would help:','<b>दोनों सही थे!</b> लड़के ने चीनी डाली थी। पर टुकड़े नीचे बिना घुले पड़े रहे, इसलिए दादी को मिठास नहीं आई। लैब ने दिखाया कि क्या मदद करता:')}</p>
+ <div class="meth"><div><b style="font-size:28px">1</b><span><b>${L('Stir','हिलाओ')}</b><br>${L('Stirring spreads the particles out quickly.','हिलाने से पार्टिकल्स जल्दी फैलते हैं।')}</span></div><div><b style="font-size:28px">2</b><span><b>${L('Heat','गरम करो')}</b><br>${L('Heat makes particles move faster.','गर्मी से पार्टिकल्स तेज़ चलते हैं।')}</span></div><div><b style="font-size:28px">3</b><span><b>${L('Small grains','छोटे दाने')}</b><br>${L('Small grains dissolve faster than big lumps.','छोटे दाने बड़े टुकड़ों से जल्दी घुलते हैं।')}</span></div></div>
+ <h3 style="margin-top:14px">${L('Was your claim right?','क्या तुम्हारा दावा सही था?')}</h3>
+ <div class="opts">${[['Yes, my claim was right','हाँ, मेरा दावा सही था'],['Partly right','थोड़ा सही'],['No, I changed my mind','नहीं, मेरी सोच बदल गई']].map((o,j)=>`<button class="opt ${c.after===j?'r':''}" data-ca="${j}">${LA(o)}</button>`).join('')}</div>
+ <label class="fld"><span>${L('What did the lab show you?','लैब ने तुम्हें क्या दिखाया?')}</span><textarea id="afterw" rows="2">${esc(c.afterw)}</textarea></label>
+ <div class="athome">${L('Write this in your science notebook too.','यह अपनी साइंस कॉपी में भी लिखो।')}</div></div>`},
+ mount(done){const c=S.csq=S.csq||{};if(c.after!==undefined)done();
+  $('#csqa').addEventListener('click',e=>{const b=e.target.closest('[data-ca]');if(!b)return;c.after=+b.dataset.ca;save();$$('#csqa [data-ca]').forEach(x=>x.classList.toggle('r',x===b));done()});
+  $('#afterw').addEventListener('input',e=>{c.afterw=e.target.value;save()})}}}
+/* ---------- steps ---------- */
+const ST=[];const mk=()=>({});
+const LOCK='<svg viewBox="0 0 24 24" width="22" height="22" aria-label="locked"><rect x="5" y="10" width="14" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>';
+ST.push({t:['Can it change back?','क्या वापस बदल सकता है?'],sub:['Reversible and irreversible','रिवर्सिबल और इरिवर्सिबल'],
+ pages:[learn(()=>`<div class="card"><div class="kicker">${L('Learn','सीखो')}</div><h2>${L('Some changes can go back. Some cannot.','कुछ बदलाव वापस हो सकते हैं। कुछ नहीं।')}</h2>${flowSVG()}
+  <p class="big">${L('Ice melts into water. In the freezer it becomes ice again. That is <b>reversible</b>.','बर्फ़ पिघलकर पानी बनती है। फ़्रीज़र में फिर बर्फ़ बन जाती है। यह <b>रिवर्सिबल</b> है।')}</p>
+  <p class="big">${L('A burnt match can never be wood again. That is <b>irreversible</b>.','जली तीली फिर कभी लकड़ी नहीं बनती। यह <b>इरिवर्सिबल</b> है।')}</p>
+  <div class="words"><b>${L('New words','नए शब्द')}</b><span>reversible · रिवर्सिबल</span><span>irreversible · इरिवर्सिबल</span></div></div>`),
+  seq({k:['Sort the changes','बदलाव छाँटो'],items:REV,retry:true,state:mk()})],
+ teach:`<p><b>Method: Predict · Observe · Explain, plus Think · Pair · Share.</b></p><ul><li><b>Hook (5 min):</b> Ice-cube race. Each child holds an ice cube. Who can melt it fastest? Then ask, "Can we make it ice again?"</li><li><b>Real demo:</b> Melt chocolate in a steel bowl over warm water, then cool it. Burn ONE match yourself and pass the black stick around.</li><li><b>On the screen:</b> read each card aloud. Give 10 seconds to think quietly, then partners whisper, then one pair taps the answer.</li><li>Ask "How do you know?" every time. A wrong tap is fine — the card lets them try again.</li></ul><span class="say">जो वापस बदल सके — रिवर्सिबल। जो वापस न बदल सके — इरिवर्सिबल।</span><p><b>Older children:</b> "Does boiling an egg make a new substance?" (Yes.)</p>`});
+ST.push({t:['Mixtures','मिक्सचर'],sub:['Mixing and separating','मिलाना और अलग करना'],
+ pages:[learn(()=>`<div class="card"><div class="kicker">${L('Learn','सीखो')}</div><h2>${L('A mixture is things mixed together.','मिक्सचर यानी चीज़ें मिली हुईं।')}</h2>
+  <p class="big">${L('The things in a mixture do not change, so we can <b>separate</b> them again. Here are three ways:','मिक्सचर में चीज़ें बदलती नहीं, इसलिए उन्हें फिर से <b>सेपरेट</b> कर सकते हैं। तीन तरीके:')}</p>
+  <div class="meth"><div>${icoHand}<span><b>${L('Sort by hand','हाथ से छाँटो')}</b><br>${L('for big pieces','बड़े टुकड़ों के लिए')}</span></div><div>${icoSieve}<span><b>${L('Sieve','सीव (छलनी)')}</b><br>${L('small bits fall through the holes','छोटे कण छेदों से गिर जाते हैं')}</span></div><div>${icoFilter}<span><b>${L('Filter','फ़िल्टर')}</b><br>${L('water goes through, solid bits stay','पानी निकल जाता है, ठोस कण रुक जाते हैं')}</span></div></div>
+  <div class="words"><b>${L('New words','नए शब्द')}</b><span>mixture · मिक्सचर</span><span>separate · सेपरेट</span><span>sieve · सीव</span><span>filter · फ़िल्टर</span></div></div>`),
+  seq({k:['Choose the best way','सबसे अच्छा तरीका चुनो'],items:MIX,retry:true,state:mk()})],
+ teach:`<p><b>Method: Learning stations with roles.</b></p><ul><li><b>Hook:</b> A "mystery bowl" of rajma, rice and atta. "Help me get my rice back!"</li><li><b>3 stations:</b> sorting (rajma + rice), sieving (atta + chana with a kitchen chhalni), filtering (muddy water through cotton cloth in a funnel cut from a bottle). Teams rotate every 8 minutes.</li><li><b>Roles:</b> Reader, Doer, Recorder. Rotate them at every station.</li><li><b>Key idea:</b> in a mixture the things do not change — they do not react.</li></ul><p><b>Older children:</b> design a way to separate sand and salt (dissolve → filter → dry in the sun).</p>`});
+ST.push({t:['Does it dissolve?','क्या यह घुलता है?'],sub:['Soluble and insoluble','सॉल्यूबल और इनसॉल्यूबल'],
+ pages:[learn(()=>`<div class="card"><div class="kicker">${L('Learn','सीखो')}</div><h2>${L('Clear or cloudy?','साफ़ या धुंधला?')}</h2>
+  <div class="jars"><div>${jar('clear')}${L('Clear: it dissolved','साफ़: घुल गया')}</div><div>${jar('cloudy','#c99a55')}${L('Cloudy: it did not','धुंधला: नहीं घुला')}</div></div>
+  <p class="big" style="margin-top:10px">${L('If a thing <b>dissolves</b>, the water stays clear. We say it is <b>soluble</b>, like sugar.','जो चीज़ <b>डिज़ॉल्व</b> होती है, पानी साफ़ रहता है। उसे <b>सॉल्यूबल</b> कहते हैं, जैसे चीनी।')}</p>
+  <p class="big">${L('If it does not dissolve, the water goes cloudy and the bits sink. It is <b>insoluble</b>, like sand.','जो नहीं घुलती, पानी धुंधला होता है और कण नीचे बैठते हैं। वह <b>इनसॉल्यूबल</b> है, जैसे रेत।')}</p>
+  <div class="words"><b>${L('New words','नए शब्द')}</b><span>dissolve · डिज़ॉल्व</span><span>soluble · सॉल्यूबल</span><span>insoluble · इनसॉल्यूबल</span><span>suspension · सस्पेंशन</span></div></div>`),
+  seq({k:['Jar test: predict first!','जार टेस्ट: पहले अनुमान लगाओ!'],items:SUB,predict:true,state:mk()})],
+ teach:`<p><b>Method: Prediction table + translanguaging.</b></p><ul><li><b>Real test:</b> six children, six steel glasses. Each child tests one thing: sugar, salt, sand, atta, instant coffee, haldi. Use 100 ml of water and 1 teaspoon each, stir, look, then look again after 5 minutes.</li><li><b>Board table:</b> Substance · Prediction · Clear or cloudy? · After 5 minutes.</li><li><b>Language:</b> children may say "घुल गया". Accept it, then add "dissolved · डिज़ॉल्व". Every science word goes on the wall in both scripts.</li><li><b>Fair-test question:</b> "Why do we use the same amount of water in every glass?"</li><li><b>Watch for:</b> "It's coloured, so it dissolved" — haldi shows this is wrong.</li></ul>`});
+ST.push({t:['Solutions','सॉल्यूशन'],sub:['Solute and solvent','सॉल्यूट और सॉल्वेंट'],
+ pages:[learn(()=>`<div class="card"><div class="kicker">${L('Learn','सीखो')}</div><h2>${L('Where did the sugar go?','चीनी कहाँ गई?')}</h2>
+  <p class="big">${L('It did not disappear! The sugar breaks into tiny <b>particles</b> that spread out in the water. Taste it — still sweet.','चीनी ग़ायब नहीं हुई! वह छोटे-छोटे <b>पार्टिकल्स</b> में टूटकर पानी में फैल जाती है। चखो — अब भी मीठा।')}</p>
+  <div class="eq"><span>${L('sugar','चीनी')}<small>solute · सॉल्यूट</small></span>+<span>${L('water','पानी')}<small>solvent · सॉल्वेंट</small></span>=<span>${L('sugar water','चीनी का पानी')}<small>solution · सॉल्यूशन</small></span></div>
+  <p class="big">${L('<b>Solute</b> = the thing that dissolves. <b>Solvent</b> = the liquid.','<b>सॉल्यूट</b> = जो घुलता है। <b>सॉल्वेंट</b> = लिक्विड।')}</p>
+  <div class="words"><b>${L('New words','नए शब्द')}</b><span>particles · पार्टिकल्स</span><span>solute · सॉल्यूट</span><span>solvent · सॉल्वेंट</span><span>solution · सॉल्यूशन</span></div></div>`),
+  seq({k:['Solute or solvent?','सॉल्यूट या सॉल्वेंट?'],items:SOL,retry:true,state:mk()})],
+ teach:`<p><b>Method: Particle dance (learning with the whole body).</b></p><ul><li>4 children are "water particles" and walk slowly. 2 children are "sugar" and hold hands in a lump.</li><li>Say "Dissolve!" — the water children gently pull the sugar children apart, and they spread out among the water.</li><li><b>Taste test:</b> use a clean cup for tasting only. "Has the sugar disappeared?" — no, it is still sweet.</li></ul><span class="say">जो घुलता है — सॉल्यूट (चीनी)। जिसमें घुलता है — सॉल्वेंट (पानी)। दोनों मिलकर — सॉल्यूशन।</span>`});
+ST.push({t:['Dissolve faster','जल्दी घोलो'],sub:['Stirring, heat and grain size','हिलाना, गर्मी और दानों का साइज़'],
+ pages:[csqPage(),
+  labPage(mk()),
+  csqAfter()],
+ teach:`<p><b>Method: Concept cartoon + fair test.</b></p><ul><li><b>Claim · Support · Question:</b> each child makes a claim (who is right), gives support (why), and asks a question to test. Do NOT reveal the answer — the page keeps it a mystery until after the lab. Children copy all three into their notebooks.</li><li><b>Fair-test rule:</b> change ONE thing, measure the time, keep everything else the same.<span class="say">एक चीज़ बदलो, समय नापो, बाकी सब वैसा ही रखो।</span></li><li><b>Lab screen, fair test mode:</b> after the first run, children may change only ONE thing per run. They predict "faster / slower / same as last time". Next unlocks after they have tried hot water, stirring and fine sugar, and done at least one fair comparison.</li><li><b>After the lab:</b> the page shows each child's claim again and reveals that both were right. Ask: "Who changed their mind? What evidence changed it?"</li><li><b>Then do it for real:</b> 1 teaspoon of sugar in 100 ml of cold vs warm water. Time it with a phone. You pour the warm water. Then try a sugar cube vs powdered sugar.</li><li><b>Older children:</b> make a bar chart on the floor with blocks (1 block = 10 seconds).</li></ul>`});
+ST.push({t:['Big quiz','बड़ा क्विज़'],sub:['Show what you know','जो सीखा, दिखाओ'],
+ pages:[(()=>{const q=mk();return seq({k:['Quiz','क्विज़'],items:QZ,score:true,state:q,end:()=>{S.quiz=q.sc||0;save();return `<h2>${L(`You got ${q.sc||0} out of ${QZ.length}!`,`${QZ.length} में से ${q.sc||0} सही!`)}</h2><p class="big">${L('Press Next to finish your journey.','अपनी यात्रा पूरी करने के लिए Next दबाओ।')}</p>`}})})()],
+ teach:`<p><b>Method: Team quiz + 3-2-1 exit ticket.</b></p><ul><li>Play in the two teams. The team must agree before tapping — this builds talk.</li><li>Unlike the other steps, there are no second tries here, so the score shows what they really know.</li><li><b>Exit ticket:</b> 3 things I saw, 2 new words, 1 question I still have. Younger children can draw.</li><li>Then use the Cambridge "Check your progress" page (popcorn, mixtures A–D, jelly) in the Learner's Book.</li></ul>`});
+
+/* ---------- notes ---------- */
+const sv=(inner,vb)=>`<svg viewBox="${vb||'0 0 120 90'}" aria-hidden="true">${inner}</svg>`;
+const P={
+ ice:`<rect x="35" y="25" width="50" height="45" rx="6" fill="#cfeaf8" stroke="#6aaed6" stroke-width="3"/><path d="M43 34h18M43 42h28" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`,
+ water:`<path d="M38 30h44v36q0 6-6 6H44q-6 0-6-6z" fill="#8cc8ea" stroke="#6aaed6" stroke-width="3"/><path d="M38 40q11-5 22 0t22 0" stroke="#fff" stroke-width="3" fill="none"/>`,
+ choc:`<rect x="25" y="25" width="70" height="40" rx="4" fill="#6b3a1e"/><path d="M48 25v40M72 25v40M25 45h70" stroke="#4a2612" stroke-width="3"/>`,
+ chocM:`<path d="M14 66q10-22 30-14t30-6 32 18q-6 10-46 10t-46-8z" fill="#6b3a1e"/><ellipse cx="44" cy="58" rx="10" ry="3" fill="#8a5330"/>`,
+ wax:`<rect x="48" y="28" width="24" height="46" rx="3" fill="#f6e7c8" stroke="#c9a96a" stroke-width="2"/><path d="M60 28v-8" stroke="#333" stroke-width="2.5"/><path d="M60 6q7 8 0 13q-7-5 0-13z" fill="#ff9d2e"/>`,
+ waxM:`<path d="M20 70q20-14 40-8t42 6q-8 8-42 8t-40-6z" fill="#f6e7c8" stroke="#c9a96a" stroke-width="2"/><path d="M60 64l4-8" stroke="#333" stroke-width="2.5"/>`,
+ egg:`<path d="M16 62q4-14 24-14 8-8 20-6 18-2 30 6 16 2 14 14-4 12-44 12t-44-12z" fill="#fffdf2" stroke="#e2d9b8" stroke-width="2"/><circle cx="58" cy="57" r="12" fill="#ffb020"/>`,
+ eggB:`<ellipse cx="60" cy="48" rx="26" ry="32" fill="#fff" stroke="#e2d9b8" stroke-width="2"/><circle cx="60" cy="52" r="13" fill="#ffc83d"/>`,
+ match:`<rect x="18" y="48" width="70" height="7" rx="2" fill="#d9a35b"/><ellipse cx="92" cy="51.5" rx="9" ry="7" fill="#d93a26"/>`,
+ matchB:`<path d="M20 54h42l26-16" stroke="#222" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M88 32q-6-8 0-14t0-14" stroke="#aaa" stroke-width="2.5" fill="none"/>`,
+ kern:`<path d="M60 32c13 8 15 28 0 36c-15-8-13-28 0-36z" fill="#e0a43a" stroke="#a86d16" stroke-width="2"/>`,
+ pop:`<g fill="#fffaf0" stroke="#e0c890" stroke-width="2"><circle cx="48" cy="50" r="15"/><circle cx="70" cy="42" r="14"/><circle cx="68" cy="62" r="14"/><circle cx="46" cy="66" r="11"/></g><circle cx="58" cy="56" r="4" fill="#e0a43a"/>`,
+ dough:`<circle cx="60" cy="52" r="22" fill="#f1dcae" stroke="#cfb47a" stroke-width="2"/><path d="M48 46q6-4 12 0" stroke="#cfb47a" stroke-width="2" fill="none"/>`,
+ roti:`<ellipse cx="60" cy="54" rx="46" ry="20" fill="#e8c27e" stroke="#b98b45" stroke-width="2"/><g fill="#9a5f25"><circle cx="44" cy="50" r="4"/><circle cx="70" cy="58" r="5"/><circle cx="62" cy="46" r="3"/><circle cx="82" cy="50" r="3"/><circle cx="36" cy="60" r="3"/></g>`,
+ bottle:`<path d="M52 10h16v14q10 6 10 18v38q0 4-4 4H46q-4 0-4-4V42q0-12 10-18z" fill="#4f9b6a" opacity=".85" stroke="#2f6b46" stroke-width="2"/><rect x="50" y="6" width="20" height="6" rx="2" fill="#2f6b46"/><path d="M50 40v34" stroke="#fff" stroke-width="3" opacity=".5"/>`
+};
+const BA={};
+function baCard(id,c){BA[id]=Object.assign({s:0},c);return `<div class="ba" id="ba-${id}">${baIn(id)}</div>`}
+function baIn(id){const c=BA[id];
+ const pic=c.s===0?c.b:c.a;
+ const txt=c.s===0?LA(c.lb):c.s===1?LA(c.la):`<b style="color:var(--tom)">✗ ${L('Still the same! It cannot go back.','अब भी वैसा ही! वापस नहीं जा सकता।')}</b>`;
+ const btn=c.s===0?LA(c.go):c.s===1?LA(c.back):L('Start again','फिर से शुरू');
+ return `<div class="nm">${LA(c.nm)}</div>${sv(pic)}<div class="st">${txt}${c.rev&&c.s===0&&c.tried?` <b style="color:var(--ok)">↺ ${L('It went back!','वापस हो गया!')}</b>`:''}</div><button class="inline sm" data-act="ba:${id}">${btn}</button>`}
+const ACT={
+ ba(id){const c=BA[id];if(c.rev){c.s=c.s===0?1:0;if(c.s===0)c.tried=1}else c.s=(c.s+1)%3;$('#ba-'+id).innerHTML=baIn(id)},
+ note(i){view={s:-1,p:0,n:+i};render();scrollTo(0,0)},
+ start(){view={s:Math.min(S.done,ST.length-1),p:0};render();scrollTo(0,0)},
+ anim(id){const w=$('#'+id);w.classList.toggle('run');const b=w.parentElement.querySelector('[data-act^="anim"]');if(b&&b.dataset.l)b.innerHTML=w.classList.contains('run')?LA(JSON.parse(b.dataset.l2)):LA(JSON.parse(b.dataset.l))},
+ tab(i){NT.tab=+i;$('#tabbox').innerHTML=tabIn()},
+ jar(a){jarAct(a)},
+ zoom(d){NT.z=Math.max(0,Math.min(2,NT.z+ +d));$('#zoombox').innerHTML=zoomIn()},
+ race(i){runRace(+i)}
+};
+const NT={tab:0,z:0,jar:{sub:null,s:'empty'}};
+const actBtn=(id,a,b)=>`<button class="inline sm" data-act="anim:${id}" data-l='${JSON.stringify(a)}' data-l2='${JSON.stringify(b)}'>${LA(a)}</button>`;
+/* melt slider */
+function meltSVG(t){const m=Math.max(0,Math.min(1,(t-20)/50)),w=64*(1-m*.35),h=60*(1-m),C=Math.round(-10+t*.5);
+ return `<svg viewBox="0 0 300 150" role="img" aria-label="Ice melting as temperature rises">
+ <ellipse cx="120" cy="128" rx="${16+80*m}" ry="${3+9*m}" fill="#8cc8ea"/>
+ ${h>1?`<rect x="${120-w/2}" y="${126-h}" width="${w}" height="${h}" rx="7" fill="#cfeaf8" stroke="#6aaed6" stroke-width="3"/><path d="M${128-w/2} ${136-h}h${w*.4}" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`:''}
+ <rect x="244" y="14" width="18" height="110" rx="9" fill="#fff" stroke="#9fb6c4" stroke-width="3"/><circle cx="253" cy="130" r="14" fill="${t<20?'#3d7fa3':'#d93a26'}"/>
+ <rect x="249" y="${124-t*1.05}" width="8" height="${t*1.05+4}" rx="4" fill="${t<20?'#3d7fa3':'#d93a26'}"/>
+ <text x="222" y="20" text-anchor="end" style="font:700 20px 'Baloo 2',sans-serif;fill:currentColor">${C} °C</text></svg>
+ <div style="text-align:center;font:700 19px 'Baloo 2',Hind,sans-serif">${t<20?L('Solid ice','ठोस बर्फ़'):m<1?L('Melting…','पिघल रही है…'):L('Liquid water','लिक्विड पानी')}</div>`}
+/* mix */
+function rnd(s){return()=>(s=(s*9301+49297)%233280)/233280}
+function mixSVG(){const r=rnd(5);let g='';
+ for(let i=0;i<30;i++){const x=30+r()*60,y=40+r()*34,tx=105+r()*90,ty=58+r()*34;g+=`<ellipse class="mv" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="5" ry="2.4" fill="#fffaf0" stroke="#bfae8a" style="--dx:${(tx-x).toFixed(1)}px;--dy:${(ty-y).toFixed(1)}px;transition-delay:${(r()*.5).toFixed(2)}s"/>`}
+ for(let i=0;i<14;i++){const x=210+r()*60,y=40+r()*34,tx=108+r()*84,ty=58+r()*34;g+=`<ellipse class="mv" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="8" ry="4.5" fill="#8e1f2c" stroke="#5c1019" style="--dx:${(tx-x).toFixed(1)}px;--dy:${(ty-y).toFixed(1)}px;transition-delay:${(r()*.5).toFixed(2)}s"/>`}
+ return `<svg viewBox="0 0 300 130"><path d="M90 60h120q-6 52-60 52t-60-52z" fill="#c9d6de" stroke="#6b8899" stroke-width="3"/>${g}<text x="60" y="28" text-anchor="middle" class="lbl">${S.lang==='hi'?'चावल':'rice'}</text><text x="240" y="28" text-anchor="middle" class="lbl">${S.lang==='hi'?'राजमा':'rajma'}</text></svg>`}
+/* separating tabs */
+function sortSVG(){const r=rnd(11);let g='';
+ for(let i=0;i<9;i++){const x=115+r()*70,y=30+r()*26;g+=`<ellipse class="mv" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="7" ry="4.5" fill="#d9a35b" stroke="#a06a2a" style="--dx:${(45+r()*40-x).toFixed(1)}px;--dy:${(104+r()*10-y).toFixed(1)}px;transition-delay:${(i*.12).toFixed(2)}s"/>`}
+ for(let i=0;i<9;i++){const x=115+r()*70,y=30+r()*26;g+=`<ellipse class="mv" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="5" ry="3.5" fill="#5b2346" stroke="#30102a" style="--dx:${(215+r()*40-x).toFixed(1)}px;--dy:${(104+r()*10-y).toFixed(1)}px;transition-delay:${(i*.12).toFixed(2)}s"/>`}
+ return `<svg viewBox="0 0 300 140"><ellipse cx="150" cy="48" rx="56" ry="20" fill="#eef2f4" stroke="#9fb6c4" stroke-width="3"/><path d="M30 100h80q-4 30-40 30t-40-30zM190 100h80q-4 30-40 30t-40-30z" fill="#c9d6de" stroke="#6b8899" stroke-width="3"/>${g}<text x="70" y="94" text-anchor="middle" class="lbl">${S.lang==='hi'?'मूँगफली':'peanuts'}</text><text x="230" y="94" text-anchor="middle" class="lbl">${S.lang==='hi'?'किशमिश':'raisins'}</text></svg>`}
+function sieveSVG(){const r=rnd(3);let g='';
+ for(let i=0;i<34;i++){const x=95+r()*110,y=40+r()*18;g+=`<circle class="mv" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2" fill="#e5cf9f" stroke="#b89a5e" stroke-width=".6" style="--dx:${(r()*8-4).toFixed(1)}px;--dy:${(70+r()*10).toFixed(1)}px;transition-delay:${(r()*1.2).toFixed(2)}s"/>`}
+ let p='';for(let i=0;i<7;i++)p+=`<circle cx="${105+i*15}" cy="${40+(i%2)*8}" r="7" fill="#5c8a3c" stroke="#3b5f24" stroke-width="1.5"/>`;
+ return `<svg viewBox="0 0 300 145"><path d="M95 120h110q-4 22-55 22t-55-22z" fill="#c9d6de" stroke="#6b8899" stroke-width="3"/><g class="shake"><ellipse cx="150" cy="30" rx="70" ry="10" fill="none" stroke="#6b8899" stroke-width="4"/><path d="M80 30q70 60 140 0" fill="#eef2f4" fill-opacity=".6" stroke="#6b8899" stroke-width="3" stroke-dasharray="3 3"/>${p}</g>${g}<text x="248" y="58" class="lbl">${S.lang==='hi'?'मटर':'peas'}</text><text x="230" y="134" class="lbl">${S.lang==='hi'?'आटा':'flour'}</text></svg>`}
+function filterSVG(){let d='';for(let i=0;i<6;i++)d+=`<circle class="mv" cx="150" cy="74" r="3.5" fill="#3d7fa3" opacity="0" style="--dy:44px;transition-delay:${(i*.35).toFixed(2)}s"/>`;
+ let s='';const r=rnd(9);for(let i=0;i<22;i++)s+=`<circle cx="${(128+r()*44).toFixed(1)}" cy="${(46+r()*12).toFixed(1)}" r="2.6" fill="#c99a55"/>`;
+ return `<svg viewBox="0 0 300 150"><path d="M100 20h100l-42 46v14h-16V66z" fill="#fff" stroke="#6b8899" stroke-width="3" stroke-linejoin="round"/><path d="M110 24h80l-40 40z" fill="#f7f1e6" stroke="#cbbb99" stroke-width="2"/><path class="fade" d="M116 28h68l-34 32z" fill="#8cc8ea" opacity=".8"/>${s}${d}<rect x="118" y="98" width="64" height="46" rx="5" fill="none" stroke="#6b8899" stroke-width="3"/><rect class="grow" x="121" y="118" width="58" height="23" fill="#8cc8ea"/><text x="214" y="50" class="lbl">${S.lang==='hi'?'रेत रुक गई':'sand stays'}</text><text x="190" y="132" class="lbl">${S.lang==='hi'?'साफ़ पानी':'clean water'}</text></svg>`}
+const TABS=[
+ [['Sort','छाँटो'],sortSVG,['Pick out the pieces by hand. This is good for big pieces you can see easily, like peanuts and raisins.','हाथ से टुकड़े चुनो। बड़े और साफ़ दिखने वाले टुकड़ों के लिए अच्छा, जैसे मूँगफली और किशमिश।'],[['Sort them','छाँटो'],['Mix again','फिर मिलाओ']]],
+ [['Sieve','सीव'],sieveSVG,['A sieve has holes. Small bits fall through and big bits stay on top. Gardeners use a sieve to get stones out of soil.','सीव (छलनी) में छेद होते हैं। छोटे कण नीचे गिरते हैं, बड़े ऊपर रहते हैं। माली मिट्टी से पत्थर निकालने के लिए छलनी लगाते हैं।'],[['Shake the sieve','छलनी हिलाओ'],['Start again','फिर से']]],
+ [['Filter','फ़िल्टर'],filterSVG,['A filter has very tiny holes. Water and dissolved things pass through. Insoluble bits like sand are too big and stay on the filter paper.','फ़िल्टर में बहुत छोटे छेद होते हैं। पानी और घुली चीज़ें निकल जाती हैं। रेत जैसे इनसॉल्यूबल कण बड़े हैं, फ़िल्टर पेपर पर रुक जाते हैं।'],[['Pour it in','डालो'],['Start again','फिर से']]]];
+function tabIn(){const t=TABS[NT.tab];return `<div class="tabs">${TABS.map((x,i)=>`<button data-act="tab:${i}" aria-pressed="${i===NT.tab}">${LA(x[0])}</button>`).join('')}</div>
+ <div class="pic"><div class="anim" id="sepA">${t[1]()}</div>${actBtn('sepA',t[3][0],t[3][1])}</div><p class="big">${LA(t[2])}</p>`}
+/* jar */
+function jar2(kind,c){
+ c=c||'#ffffff';const sug=c==='#ffffff';let x='';const r=rnd(4);
+ if(kind==='added'){for(let i=0;i<16;i++)x+=`<rect x="${(70+r()*50).toFixed(1)}" y="${(164+r()*10).toFixed(1)}" width="5" height="5" fill="${c}" stroke="#4b2160" stroke-width=".8"/>`}
+ if(kind==='cloudy'){for(let i=0;i<26;i++)x+=`<circle cx="${(40+((i*37)%110))}" cy="${(70+((i*53)%90))}" r="2.8" fill="${c}" stroke="#0003" stroke-width=".6"/>`;x=`<rect x="31" y="56" width="128" height="122" fill="${c}" opacity=".3"/>`+x}
+ if(kind==='settled')x=`<path d="M31 160q32 -6 64 0t64 0v18h-128z" fill="${c}" stroke="#0003"/>`;
+ if(kind==='clear'&&!sug)x=`<rect x="31" y="56" width="128" height="122" fill="${c}" opacity=".45"/>`;
+ return `<svg viewBox="0 0 190 196" aria-hidden="true" style="max-width:190px;width:100%;display:block;margin:0 auto"><rect x="31" y="50" width="128" height="128" fill="var(--water)"/>${x}<path d="M27 30v148q0 12 12 12h112q12 0 12-12V30" fill="none" stroke="var(--glass)" stroke-width="5"/><rect x="20" y="20" width="150" height="12" rx="5" fill="var(--glass)"/></svg>`}
+const JS={sugar:['#ffffff',1,['Sugar','चीनी']],sand:['#c99a55',0,['Sand','रेत']],salt:['#ffffff',1,['Salt','नमक']],atta:['#e5cf9f',0,['Atta','आटा']]};
+function jarIn(){const j=NT.jar,d=j.sub&&JS[j.sub];
+ const msg={empty:L('Choose something to put in the water.','पानी में डालने के लिए कुछ चुनो।'),added:L('It is sitting at the bottom. Now stir it!','नीचे पड़ा है। अब हिलाओ!'),clear:d&&d[1]?L('It dissolved! The water is clear. It is <b>soluble</b>.','घुल गया! पानी साफ़ है। यह <b>सॉल्यूबल</b> है।'):'',cloudy:L('Cloudy! It did not dissolve. This is a <b>suspension</b>.','धुंधला! नहीं घुला। यह <b>सस्पेंशन</b> है।'),settled:L('After 5 minutes the bits sank to the bottom. It is <b>insoluble</b>.','५ मिनट बाद कण नीचे बैठ गए। यह <b>इनसॉल्यूबल</b> है।'),still:L('After 5 minutes it is still clear. It stays dissolved.','५ मिनट बाद भी साफ़। घुला ही रहता है।')}[j.s];
+ const kind=j.s==='still'?'clear':j.s;
+ const btns=j.s==='empty'?Object.keys(JS).map(k=>`<button class="inline sm" data-act="jar:${k}">${LA(JS[k][2])}</button>`).join(''):j.s==='added'?`<button class="inline sm" data-act="jar:stir">${L('Stir','हिलाओ')}</button>`:(j.s==='clear'||j.s==='cloudy')?`<button class="inline sm" data-act="jar:wait">${L('Wait 5 minutes','५ मिनट रुको')}</button>`:`<button class="inline sm" data-act="jar:reset">${L('Try another','दूसरा आज़माओ')}</button>`;
+ return `${jar2(kind,d&&d[0])}<p class="big" style="text-align:center;margin-top:8px">${msg}</p><div class="btns" style="justify-content:center">${btns}</div>`}
+function jarAct(a){const j=NT.jar;if(JS[a]){j.sub=a;j.s='added'}else if(a==='stir')j.s=JS[j.sub][1]?'clear':'cloudy';else if(a==='wait')j.s=j.s==='clear'?'still':'settled';else{j.sub=null;j.s='empty'}$('#jarbox').innerHTML=jarIn()}
+/* particles */
+function pbox(kind){let g='';const r=rnd(kind==='pure'?2:6);
+ for(let y=0;y<6;y++)for(let x=0;x<9;x++){const cx=12+x*17+(y%2)*6,cy=12+y*18;
+  if(kind==='pure')g+=`<rect x="${cx-6}" y="${cy-6}" width="12" height="12" fill="#fff" stroke="#4b2160" stroke-width="2"/>`;
+  else if((x*7+y*3)%5===0)g+=`<rect x="${cx-6+r()*3}" y="${cy-6+r()*3}" width="12" height="12" fill="#fff" stroke="#4b2160" stroke-width="2"/>`;
+  else g+=`<circle cx="${(cx+r()*4-2).toFixed(1)}" cy="${(cy+r()*4-2).toFixed(1)}" r="6.5" fill="#8cc8ea" stroke="#3d7fa3" stroke-width="1.5"/>`}
+ return `<svg viewBox="0 0 166 118" aria-hidden="true"><rect x="1" y="1" width="164" height="116" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>${g}</svg>`}
+function zoomIn(){const z=NT.z;
+ const pic=z===0?jar2('clear'):z===1?`<svg viewBox="0 0 190 170" aria-hidden="true" style="max-width:220px;width:100%;display:block;margin:0 auto"><path d="M95 10q50 70 50 104a50 50 0 0 1-100 0q0-34 50-104z" fill="#8cc8ea" stroke="#3d7fa3" stroke-width="3"/><circle cx="105" cy="108" r="30" fill="#dff1fb" stroke="#4b2160" stroke-width="5"/><g fill="#3d7fa3"><circle cx="96" cy="100" r="3"/><circle cx="110" cy="96" r="3"/><circle cx="104" cy="114" r="3"/><circle cx="118" cy="110" r="3"/><circle cx="92" cy="118" r="3"/></g><rect x="106" y="104" width="5" height="5" fill="#fff" stroke="#4b2160"/><path d="M127 130l26 26" stroke="#4b2160" stroke-width="9" stroke-linecap="round"/></svg>`:`<div style="max-width:300px;margin:0 auto">${pbox('sol')}</div>`;
+ const txt=z===0?L('A glass of sugar water. It looks just like plain water!','चीनी का पानी। बिल्कुल सादे पानी जैसा दिखता है!'):z===1?L('Zoom into one drop…','एक बूँद में ज़ूम करो…'):L('Super zoom! Blue circles are water particles. White squares are sugar particles, spread out in the spaces.','सुपर ज़ूम! नीले गोले पानी के पार्टिकल्स हैं। सफ़ेद चौकोर चीनी के पार्टिकल्स हैं, बीच की जगह में फैले हुए।');
+ return `<div class="pic">${pic}</div><p class="big" style="text-align:center">${txt}</p><div class="btns" style="justify-content:center"><button class="inline sm" data-act="zoom:-1" ${z===0?'disabled style="opacity:.4"':''}>− ${L('Zoom out','छोटा करो')}</button><button class="inline sm" data-act="zoom:1" ${z===2?'disabled style="opacity:.4"':''}>+ ${L('Zoom in','ज़ूम करो')}</button></div>`}
+/* races */
+const RACES=[
+ [['Cold or hot water?','ठंडा या गरम पानी?'],[['Cold','ठंडा'],7],[['Hot','गरम'],2.5]],
+ [['Still or stirred?','बिना हिलाए या हिलाकर?'],[['Not stirred','बिना हिलाए'],7],[['Stirred','हिलाकर'],2.8]],
+ [['Lump or powder?','टुकड़ा या पाउडर?'],[['Sugar lump','चीनी का टुकड़ा'],7.5],[['Fine powder','बारीक पाउडर'],2.2]]];
+const raceHTML=()=>RACES.map((r,i)=>`<div class="race" id="race${i}"><h3>${LA(r[0])}</h3>${[r[1],r[2]].map(l=>`<div class="lane"><span>${LA(l[0])}</span><div class="track"><i></i></div></div>`).join('')}<div class="rres" style="min-height:1.6em;font-weight:600"></div><button class="inline sm" data-act="race:${i}">${L('Race! ▶','रेस! ▶')}</button></div>`).join('');
+function runRace(i){const box=$('#race'+i),bars=box.querySelectorAll('.track i'),r=RACES[i],red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ box.querySelector('.rres').textContent='';
+ bars.forEach(b=>{b.style.transition='none';b.style.width='0'});void box.offsetWidth;
+ [r[1],r[2]].forEach((l,k)=>{const d=red?.01:l[1]*.6;bars[k].style.background=k?'var(--ok)':'var(--soft)';bars[k].style.transition=`width ${d}s linear`;bars[k].style.width='100%'});
+ setTimeout(()=>{box.querySelector('.rres').innerHTML=`${L('Winner:','जीता:')} <b>${LA(r[2][0])}</b>`},red?50:r[2][1]*600+100)}
+const grainSVG=()=>{let b='',s='';for(let y=0;y<5;y++)for(let x=0;x<5;x++){const out=x===0||y===0||x===4||y===4;b+=`<rect x="${20+x*13}" y="${30+y*13}" width="11" height="11" fill="${out?'#fff':'#d8cfe0'}" stroke="${out?'#d93a26':'#8a7a96'}" stroke-width="2"/>`}
+ [[170,30],[215,30],[170,78],[215,78],[192,54]].slice(0,4).forEach(([ox,oy])=>{for(let y=0;y<2;y++)for(let x=0;x<2;x++)s+=`<rect x="${ox+x*13}" y="${oy+y*13}" width="11" height="11" fill="#fff" stroke="#d93a26" stroke-width="2"/>`});
+ return `<svg viewBox="0 0 270 130"><rect x="0" y="0" width="270" height="130" rx="12" fill="#dff1fb"/>${b}${s}<text x="52" y="122" text-anchor="middle" class="lbl">${S.lang==='hi'?'बड़ा टुकड़ा':'big lump'}</text><text x="196" y="122" text-anchor="middle" class="lbl">${S.lang==='hi'?'छोटे दाने':'small grains'}</text></svg>`};
+const ICO={
+ hand:`<circle cx="22" cy="40" r="7" fill="#d9a35b"/><circle cx="40" cy="42" r="6" fill="#5b2346"/><path d="M28 8c3 0 4 2 4 4v12l2-9c1-3 6-2 5 1l-2 11 3-6c1-3 6-1 5 2l-6 13c-2 4-6 6-11 6-6 0-9-4-9-9V14c0-4 6-4 6 0v8V12c0-3 1-4 3-4z" fill="#f2c9a0" stroke="#6a4a3a" stroke-width="2"/>`,
+ wet:`<rect x="0" y="40" width="64" height="24" fill="#8cc8ea"/><path d="M12 44V16M20 44V10M28 44V20M44 44V12M52 44V22" stroke="#5c8a3c" stroke-width="3"/><ellipse cx="20" cy="9" rx="3" ry="7" fill="#8a5a2b"/><ellipse cx="44" cy="11" rx="3" ry="7" fill="#8a5a2b"/>`,
+ bird:`<ellipse cx="38" cy="30" rx="14" ry="9" fill="#f48aa8"/><path d="M26 28q-10-6-8-16t10-6" stroke="#f48aa8" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M28 6l6 4-6 3z" fill="#2a2a2a"/><path d="M36 39v20M42 39v20" stroke="#f48aa8" stroke-width="2.5"/>`,
+ mag:`<path d="M14 10v22a18 18 0 0 0 36 0V10" stroke="#d93a26" stroke-width="10" fill="none"/><rect x="9" y="6" width="10" height="8" fill="#ccc"/><rect x="45" y="6" width="10" height="8" fill="#ccc"/><g fill="#666"><rect x="10" y="52" width="6" height="3"/><rect x="24" y="56" width="7" height="3"/><rect x="40" y="53" width="6" height="3"/></g>`,
+ cave:`<rect width="64" height="64" rx="10" fill="#5a4636"/><path d="M0 0h64v18q-8 4-12-2l-4 16-4-18q-6 6-10 0l-4 12-4-12q-6 4-10 0l-3 9-3-9q-5 2-10-2z" fill="#a08870"/><circle cx="48" cy="38" r="2.5" fill="#8cc8ea"/><path d="M10 64l6-14 6 14zM38 64l5-10 5 10z" fill="#a08870"/>`
+};
+const ico=(k)=>`<svg viewBox="0 0 64 64" aria-hidden="true">${ICO[k]}</svg>`;
+const words=a=>`<div class="words"><b>${L('Words to learn','सीखने के शब्द')}</b>${a.map(w=>`<span>${w}</span>`).join('')}</div>`;
+const rem=a=>`<div class="remember"><h3>${L('Remember','याद रखो')}</h3><ul>${a.map(x=>`<li>${LA(x)}</li>`).join('')}</ul></div>`;
+const home=a=>`<div class="athome"><h3>${L('Try at home','घर पर करके देखो')}</h3>${LA(a)}</div>`;
+const think=(q,a)=>`<details class="think"><summary>${L('Think!','सोचो!')} ${LA(q)}</summary><p class="big">${LA(a)}</p></details>`;
+const NOTES=[
+ {t:['Changes that can go back','बदलाव जो वापस हो सकते हैं'],ico:sv(P.ice),body:()=>`
+  <p class="big">${L('Materials change when we heat them or cool them. Warm ice <b>melts</b> into liquid water. Very cold water <b>freezes</b> into solid ice.','गरम या ठंडा करने से चीज़ें बदलती हैं। गरम होने पर बर्फ़ <b>पिघलकर</b> पानी बनती है। बहुत ठंडा होने पर पानी <b>जमकर</b> बर्फ़ बनता है।')}</p>
+  <div class="pic"><div id="melt">${meltSVG(10)}</div><input type="range" min="0" max="100" value="10" id="meltR" aria-label="Temperature"><p style="text-align:center;margin:0">${L('Slide to make it warmer, then slide back to cool it.','गरम करने के लिए खिसकाओ, फिर ठंडा करने के लिए वापस खिसकाओ।')}</p></div>
+  <p class="big">${L('Water can become ice, and ice can become water — again and again. A change that can go back is a <b>reversible</b> change.','पानी बर्फ़ बन सकता है और बर्फ़ पानी — बार-बार। जो बदलाव वापस हो सके, वह <b>रिवर्सिबल</b> चेंज है।')}</p>
+  <h3>${L('Tap to change them — and change them back','टैप करके बदलो — और वापस बदलो')}</h3>
+  <div class="bagrid">${baCard('choc',{nm:['Chocolate','चॉकलेट'],b:P.choc,a:P.chocM,lb:['Solid','ठोस'],la:['Melted','पिघली'],go:['Heat it','गरम करो'],back:['Cool it','ठंडा करो'],rev:1})}${baCard('wax',{nm:['Candle wax','मोम'],b:P.wax,a:P.waxM,lb:['Solid','ठोस'],la:['Melted wax','पिघला मोम'],go:['Heat it','गरम करो'],back:['Cool it','ठंडा करो'],rev:1})}${baCard('wat',{nm:['Water','पानी'],b:P.water,a:P.ice,lb:['Liquid','लिक्विड'],la:['Frozen ice','जमी बर्फ़'],go:['Freeze it','जमाओ'],back:['Warm it','गरम करो'],rev:1})}</div>
+  ${rem([['Heat makes substances change.','गर्मी से चीज़ें बदलती हैं।'],['Some changes are reversible, like ice melting and freezing again.','कुछ बदलाव रिवर्सिबल हैं, जैसे बर्फ़ का पिघलना और फिर जमना।'],['Melting and freezing do not make a new substance.','पिघलने और जमने से नया सब्सटेंस नहीं बनता।']])}
+  ${home(['Put a small piece of chocolate on a steel spoon in the sun for 10 minutes. Then put it in the fridge. What happens?','चॉकलेट का छोटा टुकड़ा स्टील के चम्मच पर रखकर १० मिनट धूप में रखो। फिर फ़्रिज में रखो। क्या होता है?'])}
+  ${think(['Is jelly setting in the fridge reversible?','क्या फ़्रिज में जेली जमना रिवर्सिबल है?'],['Yes! Warm the jelly and it becomes liquid again.','हाँ! जेली गरम करो तो फिर लिक्विड बन जाती है।'])}
+  ${words(['melt · मेल्ट','freeze · फ़्रीज़','solid · सॉलिड','liquid · लिक्विड','reversible · रिवर्सिबल'])}`},
+ {t:['Changes that cannot go back','बदलाव जो वापस नहीं होते'],ico:sv(P.matchB),body:()=>`
+  <p class="big">${L('When you burn a match, the wood turns into a black substance called <b>carbon</b>. You can never make the wood again.','माचिस जलाने पर लकड़ी एक काले सब्सटेंस <b>कार्बन</b> में बदल जाती है। लकड़ी फिर कभी नहीं बन सकती।')}</p>
+  <p class="big">${L('A change that cannot go back is an <b>irreversible</b> change. Many irreversible changes make a <b>new substance</b>.','जो बदलाव वापस न हो सके, वह <b>इरिवर्सिबल</b> चेंज है। कई इरिवर्सिबल बदलाव <b>नया सब्सटेंस</b> बनाते हैं।')}</p>
+  <h3>${L('Change them — then try to undo it!','बदलो — फिर वापस करके देखो!')}</h3>
+  <div class="bagrid">${baCard('egg',{nm:['Egg','अंडा'],b:P.egg,a:P.eggB,lb:['Raw and runny','कच्चा और पतला'],la:['Boiled and hard','उबला और सख़्त'],go:['Boil it','उबालो'],back:['Try to undo','वापस करो']})}${baCard('mat',{nm:['Matchstick','माचिस की तीली'],b:P.match,a:P.matchB,lb:['Wood','लकड़ी'],la:['Black carbon','काला कार्बन'],go:['Burn it','जलाओ'],back:['Try to undo','वापस करो']})}${baCard('pop',{nm:['Popcorn','पॉपकॉर्न'],b:P.kern,a:P.pop,lb:['Hard kernel','सख़्त दाना'],la:['Popped!','फूट गया!'],go:['Heat it','गरम करो'],back:['Try to undo','वापस करो']})}${baCard('rot',{nm:['Roti','रोटी'],b:P.dough,a:P.roti,lb:['Soft dough','गीला आटा'],la:['Cooked roti','पकी रोटी'],go:['Cook it','पकाओ'],back:['Try to undo','वापस करो']})}</div>
+  <div class="facts" style="margin-top:10px"><div class="fact">${sv(P.bottle)}<span>${L('<b>Recycling glass:</b> old glass bottles are collected, melted and made into new glass.','<b>काँच की रीसाइक्लिंग:</b> पुरानी बोतलें इकट्ठी करके पिघलाई जाती हैं और नया काँच बनता है।')}</span></div></div>
+  ${rem([['Some changes are irreversible, like burning a match.','कुछ बदलाव इरिवर्सिबल हैं, जैसे तीली जलाना।'],['Some changes make a new substance, like carbon.','कुछ बदलाव नया सब्सटेंस बनाते हैं, जैसे कार्बन।']])}
+  ${home(['Watch an adult cook a roti or boil an egg. Ask: can it go back?','किसी बड़े को रोटी पकाते या अंडा उबालते देखो। पूछो: क्या यह वापस हो सकता है?'])}
+  ${think(['Butter melts in a hot pan. Reversible or irreversible?','गरम तवे पर मक्खन पिघलता है। रिवर्सिबल या इरिवर्सिबल?'],['Reversible — in the fridge it becomes solid again. But if it burns black, that part is irreversible!','रिवर्सिबल — फ़्रिज में फिर ठोस हो जाता है। पर अगर जलकर काला हो जाए, तो वह इरिवर्सिबल है!'])}
+  ${words(['irreversible · इरिवर्सिबल','new substance · नया सब्सटेंस','carbon · कार्बन','burn · बर्न'])}`},
+ {t:['Mixtures','मिक्सचर'],ico:sv(`<path d="M15 40h90q-5 40-45 40t-45-40z" fill="#c9d6de" stroke="#6b8899" stroke-width="3"/><ellipse cx="45" cy="46" rx="6" ry="3" fill="#fff"/><ellipse cx="70" cy="50" rx="8" ry="4.5" fill="#8e1f2c"/><ellipse cx="58" cy="44" rx="6" ry="3" fill="#fff"/><ellipse cx="80" cy="44" rx="6" ry="3" fill="#fff"/><ellipse cx="38" cy="52" rx="8" ry="4.5" fill="#8e1f2c"/>`),body:()=>`
+  <p class="big">${L('A <b>mixture</b> is two or more different substances mixed together. They are not joined, so we can separate them again.','<b>मिक्सचर</b> यानी दो या ज़्यादा अलग चीज़ें मिली हुईं। वे जुड़ती नहीं, इसलिए उन्हें फिर से अलग कर सकते हैं।')}</p>
+  <div class="pic"><div class="anim" id="mixA">${mixSVG()}</div>${actBtn('mixA',['Mix them','मिलाओ'],['Un-mix','वापस'])}</div>
+  <p class="big">${L('Look closely at the mixed bowl. You can still see the rice and the rajma. They did not change. We say they do not <b>react</b> with each other.','मिले हुए कटोरे को ध्यान से देखो। चावल और राजमा अब भी दिखते हैं। वे बदले नहीं। हम कहते हैं, वे एक-दूसरे से <b>रिएक्ट</b> नहीं करते।')}</p>
+  <h3>${L('Air is a mixture too!','हवा भी एक मिक्सचर है!')}</h3>
+  <p>${L('Mixtures can be solids, liquids or gases. Air is a mixture of gases — mostly nitrogen and oxygen, with a little carbon dioxide and other gases.','मिक्सचर ठोस, लिक्विड या गैस हो सकते हैं। हवा गैसों का मिक्सचर है — ज़्यादातर नाइट्रोजन और ऑक्सीजन, थोड़ी कार्बन डाइऑक्साइड और दूसरी गैसें।')}</p>
+  <div class="gas"><span style="width:78%;background:#4b2160">${L('nitrogen 78%','नाइट्रोजन ७८%')}</span><span style="width:21%;background:#3d7fa3">${L('oxygen 21%','ऑक्सीजन २१%')}</span><span style="width:1%;background:#d93a26"></span></div>
+  <p style="font-size:15px;color:var(--soft)">${L('The thin red part (1%) is carbon dioxide and other gases.','पतला लाल हिस्सा (१%) कार्बन डाइऑक्साइड और दूसरी गैसें हैं।')}</p>
+  ${rem([['A mixture has two or more substances mixed together.','मिक्सचर में दो या ज़्यादा चीज़ें मिली होती हैं।'],['The substances in a mixture do not change or react with each other.','मिक्सचर की चीज़ें बदलती नहीं, एक-दूसरे से रिएक्ट नहीं करतीं।']])}
+  ${home(['Mix rice and atta in a jar and shake it. Can you still see both?','एक जार में चावल और आटा मिलाकर हिलाओ। क्या दोनों दिखते हैं?'])}
+  ${think(['Is chai a mixture?','क्या चाय एक मिक्सचर है?'],['Yes! Water, milk, sugar and tea are mixed together.','हाँ! पानी, दूध, चीनी और चायपत्ती मिली हुई हैं।'])}
+  ${words(['mixture · मिक्सचर','substance · सब्सटेंस','react · रिएक्ट','gas · गैस'])}`},
+ {t:['Separating mixtures','मिक्सचर को अलग करना'],ico:sv(`<ellipse cx="60" cy="26" rx="40" ry="8" fill="none" stroke="#6b8899" stroke-width="4"/><path d="M20 26q40 44 80 0" fill="#eef2f4" stroke="#6b8899" stroke-width="3" stroke-dasharray="3 3"/><circle cx="50" cy="30" r="6" fill="#5c8a3c"/><circle cx="68" cy="32" r="6" fill="#5c8a3c"/><g fill="#e5cf9f"><circle cx="52" cy="62" r="2.5"/><circle cx="62" cy="72" r="2.5"/><circle cx="68" cy="60" r="2.5"/></g>`),body:()=>`
+  <p class="big">${L('Because the substances in a mixture do not change, we can <b>separate</b> them. Tap each way and press the button to see it work.','मिक्सचर की चीज़ें बदलती नहीं, इसलिए हम उन्हें <b>सेपरेट</b> कर सकते हैं। हर तरीके पर टैप करो और बटन दबाकर देखो।')}</p>
+  <div id="tabbox">${tabIn()}</div>
+  <h3>${L('Separating in real life','असली ज़िंदगी में अलग करना')}</h3>
+  <div class="facts">
+   <div class="fact">${ico('wet')}<span>${L('<b>Wetlands</b> like marshes are nature’s filters. Soil and gravel catch dirt, so the water comes out cleaner.','<b>वेटलैंड्स</b> (दलदल) कुदरत के फ़िल्टर हैं। मिट्टी और कंकड़ गंदगी रोक लेते हैं, पानी साफ़ निकलता है।')}</span></div>
+   <div class="fact">${ico('bird')}<span>${L('<b>Flamingos</b> have filters in their beaks. They let the water out and keep the tiny food.','<b>फ़्लेमिंगो</b> की चोंच में फ़िल्टर होता है। पानी निकल जाता है, छोटा खाना रह जाता है।')}</span></div>
+   <div class="fact">${ico('mag')}<span>${L('<b>Scrap yards</b> use a giant magnet to pull iron out of a mixture of metals.','<b>कबाड़ी</b> बड़े मैग्नेट से धातुओं के मिक्सचर में से लोहा खींच लेते हैं।')}</span></div>
+  </div>
+  ${rem([['Big pieces you can see → sort by hand.','बड़े टुकड़े → हाथ से छाँटो।'],['Small dry bits and big bits → sieve.','छोटे सूखे कण और बड़े टुकड़े → छलनी।'],['Insoluble solid in a liquid → filter.','लिक्विड में इनसॉल्यूबल ठोस → फ़िल्टर।']])}
+  ${think(['How would you separate sand and salt?','रेत और नमक को कैसे अलग करोगे?'],['Add water — the salt dissolves, the sand does not. Filter out the sand. Leave the salty water in the sun. The water dries up and the salt is left.','पानी डालो — नमक घुल जाता है, रेत नहीं। रेत को फ़िल्टर कर लो। नमक वाला पानी धूप में रखो। पानी सूख जाएगा, नमक बच जाएगा।'])}
+  ${words(['separate · सेपरेट','sort · सॉर्ट','sieve · सीव','filter · फ़िल्टर','wetland · वेटलैंड'])}`},
+ {t:['Soluble or insoluble?','सॉल्यूबल या इनसॉल्यूबल?'],ico:sv(`<path d="M30 14v58q0 6 6 6h48q6 0 6-6V14" fill="#dff1fb" stroke="#9fb6c4" stroke-width="4"/><path d="M33 64q13-4 27 0t27 0v10h-54z" fill="#c99a55"/>`),body:()=>`
+  <p class="big">${L('Some solids, like sugar, <b>dissolve</b> in water. They are <b>soluble</b>. You cannot see them any more — but they are still there.','कुछ ठोस, जैसे चीनी, पानी में <b>डिज़ॉल्व</b> होते हैं। वे <b>सॉल्यूबल</b> हैं। अब दिखते नहीं — पर वहीं हैं।')}</p>
+  <p class="big">${L('Some solids, like sand, do not dissolve. They are <b>insoluble</b>. They make the water cloudy and then sink. This cloudy mixture is a <b>suspension</b>.','कुछ ठोस, जैसे रेत, नहीं घुलते। वे <b>इनसॉल्यूबल</b> हैं। पानी धुंधला करते हैं, फिर नीचे बैठ जाते हैं। इस धुंधले मिक्सचर को <b>सस्पेंशन</b> कहते हैं।')}</p>
+  <div class="pic" id="jarbox">${jarIn()}</div>
+  ${rem([['Substances that dissolve in liquids are soluble.','जो चीज़ें लिक्विड में घुलती हैं, वे सॉल्यूबल हैं।'],['Substances that do not dissolve are insoluble.','जो नहीं घुलतीं, वे इनसॉल्यूबल हैं।'],['Insoluble substances form a suspension.','इनसॉल्यूबल चीज़ें सस्पेंशन बनाती हैं।']])}
+  ${home(['Put salt, sand and atta in three glasses of water. Stir. Clear or cloudy? Look again after 5 minutes.','तीन गिलास पानी में नमक, रेत और आटा डालो। हिलाओ। साफ़ या धुंधला? ५ मिनट बाद फिर देखो।'])}
+  ${think(['Haldi turns water yellow. Did it dissolve?','हल्दी पानी को पीला कर देती है। क्या वह घुल गई?'],['Mostly no! Look at the bottom after 5 minutes — most of the haldi has settled there. Colour does not always mean dissolved.','ज़्यादातर नहीं! ५ मिनट बाद नीचे देखो — ज़्यादातर हल्दी वहाँ बैठ गई है। रंग का मतलब हमेशा घुलना नहीं होता।'])}
+  ${words(['dissolve · डिज़ॉल्व','soluble · सॉल्यूबल','insoluble · इनसॉल्यूबल','suspension · सस्पेंशन'])}`},
+ {t:['Solutions and particles','सॉल्यूशन और पार्टिकल्स'],ico:sv(`<rect x="20" y="15" width="80" height="60" rx="10" fill="#fff" stroke="#e6dcea" stroke-width="2"/><g fill="#8cc8ea" stroke="#3d7fa3"><circle cx="38" cy="32" r="6"/><circle cx="58" cy="30" r="6"/><circle cx="80" cy="34" r="6"/><circle cx="44" cy="56" r="6"/><circle cx="76" cy="58" r="6"/></g><rect x="54" y="48" width="11" height="11" fill="#fff" stroke="#4b2160" stroke-width="2"/>`),body:()=>`
+  <p class="big">${L('Everything is made of tiny <b>particles</b> — much too small to see. Particles are always moving.','हर चीज़ बहुत छोटे <b>पार्टिकल्स</b> से बनी है — इतने छोटे कि दिखते नहीं। पार्टिकल्स हमेशा हिलते रहते हैं।')}</p>
+  <div id="zoombox">${zoomIn()}</div>
+  <p class="big">${L('When sugar dissolves, its particles spread out in the spaces between the water particles.','चीनी घुलती है तो उसके पार्टिकल्स पानी के पार्टिकल्स के बीच की जगह में फैल जाते हैं।')}</p>
+  <div class="eq"><span>${L('sugar','चीनी')}<small>solute · सॉल्यूट</small></span>+<span>${L('water','पानी')}<small>solvent · सॉल्वेंट</small></span>=<span>${L('sugar water','चीनी का पानी')}<small>solution · सॉल्यूशन</small></span></div>
+  <p class="big">${L('The <b>solute</b> is what dissolves. The <b>solvent</b> is the liquid. Together they make a <b>solution</b>.','<b>सॉल्यूट</b> वह है जो घुलता है। <b>सॉल्वेंट</b> लिक्विड है। दोनों मिलकर <b>सॉल्यूशन</b> बनाते हैं।')}</p>
+  <h3>${L('Pure substance or mixture?','प्योर सब्सटेंस या मिक्सचर?')}</h3>
+  <div class="jars"><div>${pbox('pure')}${L('Pure sugar: only one kind of particle','प्योर चीनी: एक ही तरह के पार्टिकल्स')}</div><div>${pbox('sol')}${L('Sugar water: two kinds — a mixture','चीनी का पानी: दो तरह के — मिक्सचर')}</div></div>
+  ${rem([['A solution is a solute dissolved in a solvent.','सॉल्यूशन = सॉल्वेंट में घुला सॉल्यूट।'],['A pure substance has only one kind of particle.','प्योर सब्सटेंस में एक ही तरह के पार्टिकल्स होते हैं।'],['A solution is a mixture, so it can be separated — for example, by drying it in the sun.','सॉल्यूशन एक मिक्सचर है, इसलिए अलग किया जा सकता है — जैसे धूप में सुखाकर।']])}
+  ${think(['How can you prove the sugar is still in the water?','कैसे साबित करोगे कि चीनी अब भी पानी में है?'],['Taste a little from a clean cup — it is sweet! Or leave it in the sun: the water dries up and sugar is left behind.','साफ़ कप से थोड़ा चखो — मीठा है! या धूप में रखो: पानी सूख जाएगा और चीनी बच जाएगी।'])}
+  ${words(['particles · पार्टिकल्स','solute · सॉल्यूट','solvent · सॉल्वेंट','solution · सॉल्यूशन','pure · प्योर'])}`},
+ {t:['Dissolving faster','जल्दी घोलना'],ico:sv(`<path d="M34 20v50q0 6 6 6h40q6 0 6-6V20" fill="#dff1fb" stroke="#9fb6c4" stroke-width="4"/><path d="M78 8L58 66" stroke="#6a5a73" stroke-width="6" stroke-linecap="round"/><path d="M44 14q4-6 0-12M58 14q4-6 0-12" stroke="#d93a26" stroke-width="2.5" fill="none"/>`),body:()=>`
+  <p class="big">${L('Three things help a solid dissolve faster. Press <b>Race!</b> to see which glass wins.','तीन चीज़ें ठोस को जल्दी घोलने में मदद करती हैं। <b>रेस!</b> दबाकर देखो कौन सा गिलास जीतता है।')}</p>
+  ${raceHTML()}
+  <h3>${L('1. Stirring','१. हिलाना')}</h3><p class="big">${L('Stirring spreads the solute particles into the spaces between the solvent particles more quickly.','हिलाने से सॉल्यूट के पार्टिकल्स सॉल्वेंट के पार्टिकल्स के बीच जल्दी फैलते हैं।')}</p>
+  <h3>${L('2. Heat','२. गर्मी')}</h3><p class="big">${L('Heat gives particles more energy, so they move faster. The solute spreads through the solution more easily.','गर्मी पार्टिकल्स को ज़्यादा एनर्जी देती है, वे तेज़ चलते हैं। सॉल्यूट आसानी से फैलता है।')}</p>
+  <h3>${L('3. Small grains','३. छोटे दाने')}</h3>
+  <div class="pic">${grainSVG()}</div>
+  <p class="big">${L('Only the particles on the outside of a grain (red edges) touch the water, so they dissolve first. A big lump has many particles hidden inside, waiting their turn. Small grains have fewer, so they dissolve faster.','दाने के बाहर के पार्टिकल्स (लाल किनारे) ही पानी को छूते हैं, वही पहले घुलते हैं। बड़े टुकड़े में बहुत से पार्टिकल्स अंदर छिपे हैं, अपनी बारी का इंतज़ार करते हैं। छोटे दानों में कम हैं, इसलिए जल्दी घुलते हैं।')}</p>
+  <div class="facts"><div class="fact">${ico('cave')}<span>${L('<b>Amazing fact:</b> rainwater can dissolve some kinds of rock. In caves, the rock comes back out of the water, drip by drip, and makes dripstones.','<b>मज़ेदार बात:</b> बारिश का पानी कुछ चट्टानों को घोल सकता है। गुफ़ाओं में बूँद-बूँद से वह चट्टान फिर बाहर आती है और ड्रिपस्टोन बनाती है।')}</span></div></div>
+  ${rem([['Stirring makes solids dissolve faster.','हिलाने से ठोस जल्दी घुलते हैं।'],['Heating makes solids dissolve faster.','गरम करने से ठोस जल्दी घुलते हैं।'],['Small grains dissolve faster than large grains.','छोटे दाने बड़े दानों से जल्दी घुलते हैं।']])}
+  ${home(['Put a sugar cube in one glass and crushed sugar in another. Which dissolves first?','एक गिलास में चीनी का टुकड़ा और दूसरे में पिसी चीनी डालो। कौन पहले घुलेगी?'])}
+  ${think(['Why do we make chai with hot water, not cold?','चाय गरम पानी में क्यों बनाते हैं, ठंडे में क्यों नहीं?'],['Hot water makes the sugar dissolve faster, and it brings the taste out of the tea leaves too.','गरम पानी में चीनी जल्दी घुलती है, और चायपत्ती का स्वाद भी अच्छे से निकलता है।'])}
+  ${words(['stir · स्टर','energy · एनर्जी','grain · ग्रेन','rate · रेट (कितनी जल्दी)'])}`,mount:()=>{}}
+];
+const NMAP=[0,2,4,5,6];
+function renderNotes(m){
+ if(view.n<0){
+  m.innerHTML=`<h1 style="margin-top:6px">${L('Notes','नोट्स')}</h1><p class="big">${L('Read each topic and play with the pictures. You can read them in any order.','हर टॉपिक पढ़ो और चित्रों से खेलो। किसी भी क्रम में पढ़ सकते हो।')}</p>
+  <div class="nlist">${NOTES.map((n,i)=>`<button class="nitem" data-act="note:${i}">${n.ico}<span><span class="count">${L('Topic','टॉपिक')} ${i+1}</span><span style="display:block;font:700 19px 'Baloo 2',Hind,sans-serif;line-height:1.15">${LA(n.t)}</span></span></button>`).join('')}</div>`;
+  nx.disabled=false;nx.innerHTML=L('Start reading →','पढ़ना शुरू करो →');return}
+ const n=NOTES[view.n];
+ m.innerHTML=`<div class="count" style="margin-top:4px">${L('Notes · Topic','नोट्स · टॉपिक')} ${view.n+1} / ${NOTES.length}</div><h2>${LA(n.t)}</h2><div class="card note">${n.body()}</div>`;
+ nx.disabled=false;nx.innerHTML=view.n<NOTES.length-1?L('Next topic →','अगला टॉपिक →'):L('All notes ✓','सारे नोट्स ✓');
+ const r=$('#meltR');if(r)r.addEventListener('input',()=>{$('#melt').innerHTML=meltSVG(+r.value)});
+}
+$('#main').addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const i=t.dataset.act.indexOf(':'),a=i<0?t.dataset.act:t.dataset.act.slice(0,i),arg=i<0?'':t.dataset.act.slice(i+1);if(ACT[a])ACT[a](arg,t)});
+const READ=`<div class="tnote"><h3>Reading the notes together</h3><ul><li><b>Picture walk first:</b> before reading, scroll through and ask "What do you see? What do you think will happen?"</li><li><b>Read aloud, then echo-read:</b> you read a line, and the children repeat it. Do it in Hindi, then the English science word.</li><li><b>Paired reading:</b> an English reader and a Hindi reader sit together. One reads the English line, the other reads the Hindi line, then they explain it to each other.</li><li><b>Stop and tap:</b> at every picture, a different child presses the button. Everyone predicts first.</li><li><b>KWL chart:</b> before the topic, What I Know / What I Want to know; after it, What I Learned.</li><li><b>"Think!" boxes:</b> don't open them straight away. Give a minute of partner talk, then reveal.</li><li><b>"Try at home":</b> send it as homework and ask children to tell the class the next day.</li></ul></div>`;
+
+/* ---------- experiments (what-if) ---------- */
+S.th=S.th||{};
+const LP=a=>S.lang==='hi'?a[1]:S.lang==='en'?a[0]:a[0]+' / '+a[1];
+const TH=[
+ {id:'freeze',t:['What if water never froze?','अगर पानी कभी न जमे तो?'],s:['Imagine a world where water stays liquid, even when it is very, very cold.','सोचो एक ऐसी दुनिया जहाँ पानी बहुत-बहुत ठंड में भी लिक्विड ही रहे।'],q:['What would change?','क्या बदल जाएगा?'],o:[['No ice in drinks, no kulfi','ड्रिंक में बर्फ़ नहीं, कुल्फ़ी नहीं'],['No snow on the mountains','पहाड़ों पर बर्फ़ नहीं'],['Both of these','ये दोनों']],sci:['Scientists think: both! Freezing makes ice, snow and kulfi. Without snow on the mountains, there would be no snow melting into rivers in summer.','वैज्ञानिक सोचते हैं: दोनों! जमने से ही बर्फ़, स्नो और कुल्फ़ी बनती है। पहाड़ों पर बर्फ़ न हो तो गर्मी में पिघलकर नदियों में पानी भी नहीं आएगा।'],talk:['Ask at home: what else in our kitchen needs freezing?','घर पर पूछो: हमारी रसोई में और किसे जमाना पड़ता है?']},
+ {id:'shrink',t:['Tiny you in a cup of chai','चाय के कप में छोटे से तुम'],s:['Imagine you shrink until you are as small as a particle. You are sitting inside a cup of chai with sugar. Someone stirs it!','सोचो तुम इतने छोटे हो गए कि एक पार्टिकल जितने हो। तुम चीनी वाली चाय के कप में बैठे हो। कोई चम्मच से हिलाता है!'],q:['What happens to you and the sugar?','तुम्हारे और चीनी के साथ क्या होगा?'],o:[['We stay still','हम हिलेंगे नहीं'],['We get pushed around and spread out','हम धक्के खाकर फैल जाएँगे'],['We get bigger','हम बड़े हो जाएँगे']],sci:['Scientists think: you get pushed and spread out! Stirring pushes particles into the spaces between the water particles. In hot chai everything moves fast, like a busy bazaar.','वैज्ञानिक सोचते हैं: तुम धक्के खाकर फैल जाओगे! हिलाने से पार्टिकल्स पानी के पार्टिकल्स के बीच की जगह में चले जाते हैं। गरम चाय में सब तेज़ चलते हैं, भीड़ वाले बाज़ार की तरह।'],talk:['Act it out with your family: some are tea, one is sugar. Now stir!','घर वालों के साथ करके देखो: कुछ चाय बनो, एक चीनी। अब हिलाओ!']},
+ {id:'oil',t:['Sugar in oil?','तेल में चीनी?'],s:['Sugar dissolves in water. But what if you put sugar in a spoon of cooking oil and stir?','चीनी पानी में घुल जाती है। पर अगर एक चम्मच खाने के तेल में चीनी डालकर हिलाओ तो?'],q:['What do you think will happen?','तुम्हें क्या लगता है, क्या होगा?'],o:[['It will dissolve','घुल जाएगी'],['It will not dissolve','नहीं घुलेगी'],['It will melt','पिघल जाएगी']],sci:['Scientists think: it will not dissolve! Sugar is soluble in water but insoluble in oil. Whether something dissolves depends on the solvent too. Try it with an adult!','वैज्ञानिक सोचते हैं: नहीं घुलेगी! चीनी पानी में सॉल्यूबल है, पर तेल में इनसॉल्यूबल। कोई चीज़ घुलेगी या नहीं, यह सॉल्वेंट पर भी निर्भर है। बड़ों के साथ करके देखो!'],talk:['Is the solvent important? What other liquids could you test?','क्या सॉल्वेंट ज़रूरी है? और कौन से लिक्विड टेस्ट कर सकते हो?']},
+ {id:'unburn',t:['The un-burn machine','जली चीज़ ठीक करने की मशीन'],s:['Your friend says: "I will build a machine that turns a burnt roti back into soft atta!"','तुम्हारा दोस्त कहता है: "मैं एक मशीन बनाऊँगा जो जली रोटी को फिर से गीला आटा बना देगी!"'],q:['Can this machine ever work?','क्या यह मशीन कभी काम करेगी?'],o:[['Yes','हाँ'],['No','नहीं'],['Maybe','शायद']],sci:['Scientists think: no. Cooking and burning make new substances, like black carbon and smoke. The atta particles have changed into different ones. That is why it is irreversible.','वैज्ञानिक सोचते हैं: नहीं। पकाने और जलाने से नए सब्सटेंस बनते हैं, जैसे काला कार्बन और धुआँ। आटे के पार्टिकल्स बदलकर दूसरे बन गए। इसलिए यह इरिवर्सिबल है।'],talk:['Find 3 changes in your kitchen that no machine could undo.','रसोई में ३ ऐसे बदलाव ढूँढो जिन्हें कोई मशीन वापस नहीं कर सकती।']},
+ {id:'allsol',t:['What if everything dissolved?','अगर सब कुछ घुल जाए तो?'],s:['Imagine everything was soluble in water — cups, spoons, your shoes, even buildings!','सोचो हर चीज़ पानी में सॉल्यूबल होती — कप, चम्मच, तुम्हारे जूते, यहाँ तक कि घर भी!'],q:['What would happen when it rains?','बारिश होने पर क्या होगा?'],o:[['Nothing changes','कुछ नहीं बदलेगा'],['Things would dissolve away','चीज़ें घुलकर बह जाएँगी'],['Everything gets bigger','सब बड़ा हो जाएगा']],sci:['Scientists think: things would dissolve away! It is a good thing that cups, pots and buildings are made of insoluble materials. Rain can slowly dissolve some rocks, and that is how caves get dripstones.','वैज्ञानिक सोचते हैं: चीज़ें घुलकर बह जाएँगी! अच्छा है कि कप, बर्तन और घर इनसॉल्यूबल चीज़ों से बने हैं। बारिश धीरे-धीरे कुछ चट्टानें घोलती है, ऐसे ही गुफ़ाओं में ड्रिपस्टोन बनते हैं।'],talk:['Look around your home: which things must be insoluble? Why?','घर में देखो: किन चीज़ों का इनसॉल्यूबल होना ज़रूरी है? क्यों?']}
+];
+
+const thDone=t=>{const d=S.th[t.id];return !!(d&&d.agree!==undefined)};
+const AG=[['I agree','मैं सहमत हूँ'],['I am not sure','पक्का नहीं'],['I disagree','मैं सहमत नहीं']];
+function answersText(){const c=S.csq||{};
+ const lines=[`Material Changes — ${S.name||'(no name)'}`,`${LP(['Activities done','पूरी एक्टिविटीज़'])}: ${S.done}/${ST.length}`];
+ if(S.quiz!==undefined)lines.push(`${LP(['Quiz score','क्विज़ स्कोर'])}: ${S.quiz}/${QZ.length}`);
+ if(c.claim!==undefined){lines.push('',LP(["Granny's coffee",'दादी की कॉफ़ी'])+':');lines.push(`   ${LP(['Claim','दावा'])}: ${LP(CSQ.claim[c.claim])}`);if(c.sup!==undefined)lines.push(`   ${LP(['Support','सबूत'])}: ${LP(CSQ.sup[c.sup])}`);lines.push(`   ${LP(['Question','सवाल'])}: ${c.qown&&c.qown.trim()?c.qown.trim():c.q!==undefined?LP(CSQ.q[c.q]):'—'}`);if(c.after!==undefined)lines.push(`   ${LP(['After the lab','लैब के बाद'])}: ${LP([['my claim was right','दावा सही था'],['partly right','थोड़ा सही'],['I changed my mind','सोच बदल गई']][c.after])}${c.afterw&&c.afterw.trim()?' — '+c.afterw.trim():''}`)}
+ lines.push('',LP(['Experiments','प्रयोग'])+':');
+ TH.forEach((t,i)=>{const d=S.th[t.id]||{};lines.push(`${i+1}. ${LP(t.t)}`);
+  lines.push(`   ${LP(['My answer','मेरा जवाब'])}: ${d.pick!==undefined?LP(t.o[d.pick]):'—'}`);
+  if(d.why&&d.why.trim())lines.push(`   ${LP(['Because','क्योंकि'])}: ${d.why.trim()}`);
+  if(d.agree!==undefined)lines.push(`   ${LP(['Scientists','वैज्ञानिक'])}: ${LP(AG[d.agree])}${d.why2&&d.why2.trim()?' — '+d.why2.trim():''}`)});
+ return lines.join('\n')}
+const sendBox=()=>{const n=TH.filter(thDone).length;return n<TH.length?`<div class="card send off"><h3>${L('Send your answers to your teacher','अपने जवाब टीचर को भेजो')}</h3><p>${L(`Finish all ${TH.length} experiments first. Then a WhatsApp button will appear here. (${n} of ${TH.length} done)`,`पहले सारे ${TH.length} प्रयोग पूरे करो। फिर यहाँ WhatsApp बटन आएगा। (${TH.length} में से ${n} पूरे)`)}</p></div>`:`<div class="card send"><h3>${L('All experiments done! Send your answers to your teacher','सारे प्रयोग पूरे! अपने जवाब टीचर को भेजो')}</h3><p>${L('This sends your name, quiz score, Granny’s coffee claim and all your experiment answers.','इससे तुम्हारा नाम, क्विज़ स्कोर, दादी की कॉफ़ी वाला दावा और सारे प्रयोगों के जवाब जाएँगे।')}</p><a class="go wa" href="https://wa.me/?text=${encodeURIComponent(answersText())}" target="_blank" rel="noopener">${L('Send on WhatsApp','WhatsApp पर भेजो')}</a><p style="font-size:14px;color:var(--soft);margin:0">${L('Choose your teacher’s chat, then press send.','टीचर की चैट चुनो, फिर भेजो दबाओ।')}</p></div>`};
+Object.assign(ACT,{
+ xlab(){view={s:-1,p:0,x:{k:'lab'}};render();scrollTo(0,0)},
+ xth(i){view={s:-1,p:0,x:{k:'th',i:+i}};render();scrollTo(0,0)},
+ thpick(j){const t=TH[view.x.i],d=S.th[t.id]||(S.th[t.id]={});d.pick=+j;save();const y=scrollY;render();scrollTo(0,y)},
+ thsee(){const t=TH[view.x.i],d=S.th[t.id];if(!d||!(d.why||'').trim())return;d.seen=1;save();const y=scrollY;render();scrollTo(0,y)},
+ thagree(j){const t=TH[view.x.i],d=S.th[t.id];d.agree=+j;save();const y=scrollY;render();scrollTo(0,y)}
+});
+function labHome(m){nav.style.display='none';
+ const n=TH.filter(thDone).length;
+ m.innerHTML=`<h1 style="margin-top:6px">${L('Experiments','प्रयोग')}</h1><p class="big">${L('No equipment — just your brain! What would happen if…?','कोई सामान नहीं — बस दिमाग़! अगर ऐसा हो तो क्या होगा…?')}</p><p class="count">${L(`${n} of ${TH.length} done`,`${TH.length} में से ${n} पूरे`)}</p>
+ <div class="nlist">${TH.map((t,i)=>`<button class="nitem" data-act="xth:${i}"><svg viewBox="0 0 64 56" aria-hidden="true"><circle cx="32" cy="24" r="16" fill="#ffc83d" stroke="#e0a43a" stroke-width="3"/><path d="M26 42h12M27 48h10" stroke="#6a5a73" stroke-width="3" stroke-linecap="round"/><path d="M28 22q4-6 8 0" stroke="#d93a26" stroke-width="3" fill="none"/></svg><span><span class="count">${L('Experiment','प्रयोग')} ${i+1}</span><span style="display:block;font:700 19px 'Baloo 2',Hind,sans-serif;line-height:1.15">${LA(t.t)}</span><span class="count">${thDone(t)?`<b style="color:var(--ok)">✓ ${L('Done','पूरा')}</b>`:S.th[t.id]?L('Started','शुरू किया'):L('Not done yet','अभी नहीं किया')}</span></span></button>`).join('')}</div>
+ <div style="margin-top:18px">${sendBox()}</div>`}
+function thPage(m){const t=TH[view.x.i],d=S.th[t.id]||{},hasWhy=(d.why||'').trim().length>2;
+ m.innerHTML=`<div class="count" style="margin-top:4px">${L('Experiment','प्रयोग')} ${view.x.i+1} / ${TH.length}</div><h2>${LA(t.t)}</h2>
+ <div class="card"><div class="bubble">${LA(t.s)}</div>
+ <h3 class="csqh"><span>1</span>${LA(t.q)}</h3>
+ <div class="opts">${t.o.map((o,j)=>`<button class="opt ${d.pick===j?'r':''}" data-act="thpick:${j}">${LA(o)}</button>`).join('')}</div>
+ ${d.pick!==undefined?`<h3 class="csqh"><span>2</span>${L('Your reason','तुम्हारा कारण')}</h3><label class="fld"><span>${L('I think this because… (type, or tap the microphone on your keyboard)','मुझे ऐसा लगता है क्योंकि… (टाइप करो या कीबोर्ड का माइक दबाओ)')}</span><textarea id="thWhy" rows="3">${esc(d.why)}</textarea></label>
+  ${d.seen?'':`<button class="inline" id="thSee" data-act="thsee" ${hasWhy?'':'disabled style="opacity:.45"'}>${L('See what scientists think →','देखो वैज्ञानिक क्या सोचते हैं →')}</button>`}`:''}
+ ${d.seen?`<h3 class="csqh"><span>3</span>${L('Scientists think…','वैज्ञानिक सोचते हैं…')}</h3><div class="bubble sci">${LA(t.sci).replace(/^(Scientists think:|वैज्ञानिक सोचते हैं:)\s*/,'').replace(/^[a-z]/,c=>c.toUpperCase()).replace(/(<span class="hi2">)वैज्ञानिक सोचते हैं:\s*/,'$1')}</div>
+  <h3 style="margin-top:12px">${L('Do you agree? Why?','क्या तुम सहमत हो? क्यों?')}</h3>
+  <div class="tg ag">${AG.map((o,j)=>`<button data-act="thagree:${j}" aria-pressed="${d.agree===j}">${LA(o)}</button>`).join('')}</div>
+  ${d.agree!==undefined?`<label class="fld"><span>${L('Why?','क्यों?')}</span><textarea id="thWhy2" rows="2">${esc(d.why2)}</textarea></label>
+  <div class="athome"><h3>${L('Write it in your science notebook','अपनी साइंस कॉपी में लिखो')}</h3>${L('Write: the question, your answer, your reason, and whether you agree with scientists.','लिखो: सवाल, तुम्हारा जवाब, तुम्हारा कारण, और क्या तुम वैज्ञानिकों से सहमत हो।')}<p style="margin:.6em 0 0"><b>${L('Talk about it:','इस पर बात करो:')}</b> ${LA(t.talk)}</p></div>
+  ${view.x.i===TH.length-1||TH.every(thDone)?sendBox():''}`:''}`:''}</div>`;
+ const w=$('#thWhy');if(w)w.addEventListener('input',()=>{S.th[t.id].why=w.value;save();const b=$('#thSee');if(b){const ok=w.value.trim().length>2;b.disabled=!ok;b.style.opacity=ok?'':'.45'}});
+ const w2=$('#thWhy2');if(w2)w2.addEventListener('input',()=>{S.th[t.id].why2=w2.value;save();const a=$('#main .go.wa');if(a)a.href='https://wa.me/?text='+encodeURIComponent(answersText())});
+ const ok=d.agree!==undefined;nx.disabled=!ok;nx.innerHTML=!ok?`${L('Next →','आगे →')}<span class="hint">${d.pick===undefined?L('choose your answer first','पहले जवाब चुनो'):!d.seen?L('write your reason, then see what scientists think','कारण लिखो, फिर देखो वैज्ञानिक क्या सोचते हैं'):L('say if you agree','बताओ तुम सहमत हो या नहीं')}</span>`:view.x.i<TH.length-1?L('Next experiment →','अगला प्रयोग →'):L('Finish ✓','पूरा ✓')}
+function renderX(m){const x=view.x;if(x.k==='lab')return labHome(m);nav.style.display='block';return thPage(m)}
+function xNext(){const x=view.x;if(x.i<TH.length-1)x.i++;else view.x={k:'lab'};render();scrollTo(0,0)}
+function xBack(){const x=view.x;if(x.k==='lab')view={s:-1,p:0};else view.x={k:'lab'};render();scrollTo(0,0)}
+const LABT=`<div class="tnote"><h3>Experiments (what-if questions)</h3><ul>
+<li>Each one has 3 parts: <b>1. Answer</b> the question, <b>2. Give a reason</b> (required before moving on), <b>3. "Scientists think… do you agree? Why?"</b></li>
+<li>Use one as a 5-minute class starter: read it aloud, take a vote, ask for reasons, and only then show what scientists think.</li>
+<li>Children write the question, their answer, their reason and whether they agree in their <b>science notebook</b>. The page reminds them.</li>
+<li><b>Getting answers:</b> once all 5 experiments are done, a WhatsApp button appears. It sends you the child's name, activities done, quiz score, Granny's coffee claim, and every experiment answer with reasons.</li></ul>
+<h3>Message for parents (copy and post in the WhatsApp group)</h3><span class="say" id="pmsg">नमस्ते! इस हफ़्ते बच्चे "मटीरियल चेंजेस" पढ़ रहे हैं। कृपया बच्चे के साथ यह पेज खोलें, नोट्स पढ़ें, एक्टिविटीज़ और प्रयोग करें। बच्चे अपने जवाब साइंस कॉपी में भी लिखें। सारे प्रयोग पूरे होने पर "Send on WhatsApp" दबाकर जवाब टीचर को भेज दें। धन्यवाद!</span>
+<div class="tools"><button id="pcopy">Copy parent message</button></div></div>`;
+
+/* ---------- teacher sheet ---------- */
+const GUIDE=`<details><summary>How to use this page in class</summary><ul><li>Show it on a TV or projector, or give one phone to each team of 3.</li><li><b>Experiments</b> (on the first page): 5 what-if questions. Children answer and send everything to you with one WhatsApp button.</li><li>These notes open only when the page address ends in <b>#teacher</b>, so children never see them.</li><li><b>Notes</b> (on the first page) are the reading material: 7 illustrated topics with pictures to tap. They are never locked — read a topic before its activity step.</li><li>Do ONE step per lesson. Each step has a short "Learn" card, then a "Try" activity. <b>Next</b> unlocks only when the activity is finished.</li><li>Do the real hands-on activity from these notes either before or after the screen. The screen does not replace the experiment.</li><li>Progress is saved on this device. "Unlock all" and "Start again" are below.</li></ul></details>
+<details><summary>Your class: 6 children, 2 reading groups</summary><ul><li><b>Make 2 teams of 3:</b> each with 1 English reader and 2 Hindi readers.</li><li><b>Rotate roles:</b> Reader, Doer, Recorder. Switch the screen to हिं when a Hindi reader is the Reader, so English readers are not always in charge.</li><li><b>Word wall in two scripts:</b> dissolve · डिज़ॉल्व. Every child says each word aloud.</li><li><b>Talk first, words after:</b> let children explain in Hindi. The English label comes after they understand.</li><li><b>Ages 6–10:</b> younger children aim for "observe and sort". Older children go on to "fair test and particles".</li></ul></details>
+<details><summary>Teaching methods used in this chapter</summary><ul><li><b>Predict · Observe · Explain:</b> a prediction before every test. Praise wrong predictions: "You tested your idea — that's real science!"</li><li><b>Think · Pair · Share:</b> 10 seconds of quiet thinking, then a whisper to a partner, then share.</li><li><b>Particle dance:</b> act out particles with their bodies.</li><li><b>Concept cartoon:</b> two characters disagree, and children decide who is right and test it.</li><li><b>Fair test:</b> change one thing, measure one thing, keep everything else the same.</li><li><b>Questioning ladder:</b> What do you see? → What happened? → Why? → What if…?</li><li><b>Science journal:</b> a before-and-after drawing every lesson.</li></ul></details>
+<details><summary>Wrong ideas to listen for</summary><ul><li>"The sugar disappeared." → It spread out. Taste it, or dry the water in the sun.</li><li>"Melting and dissolving are the same." → Melting needs heat and one thing. Dissolving needs two things.</li><li>"Heat always makes irreversible changes." → Melting chocolate is reversible.</li><li>"Coloured water means it dissolved." → Look for clear vs cloudy (haldi).</li></ul></details>
+<details><summary>Safety and materials</summary><ul><li>Only the teacher pours hot water and lights matches. Tasting only from clean cups kept apart from the experiments.</li><li>Kitchen kit: steel glasses, teaspoons, sugar, sugar cubes, salt, sand, atta, rajma, rice, chana, chalk, instant coffee, haldi, a chhalni, a chai strainer, cotton cloth, plastic bottles, ice, a phone stopwatch.</li></ul></details>
+<details><summary>Checking learning</summary><ul><li><b>Starting:</b> sorts changes into "goes back / doesn't go back".</li><li><b>Growing:</b> uses reversible, mixture, soluble and solution correctly in either language.</li><li><b>Strong:</b> explains with particles why stirring, heat and small grains speed up dissolving, and plans a fair test.</li></ul></details>`;
+function openSheet(){
+ const s=view.s>=0&&view.n===undefined&&!view.x?ST[view.s]:null;
+ $('#sheetIn').innerHTML=`<div class="top"><h2 style="margin:0">Teacher notes</h2><button class="x" id="sx">Close</button></div>
+  ${view.x?LABT:view.n!==undefined?READ:s?`<div class="tnote"><h3>Step ${view.s+1}: ${s.t[0]}</h3>${s.teach}</div>`:`<p>Open a step to see the notes for that lesson, or open Notes for reading tips. The whole-chapter guide is below.</p>`}
+  <h3 style="margin-top:14px">Whole-chapter guide</h3>${GUIDE}
+  <div class="tools"><button id="ua">${S.all?'Lock steps again':'Unlock all steps'}</button><button id="rs">Start again (clear progress)</button></div>`;
+ $('#sheet').classList.add('on');$('#sx').focus();
+ $('#sx').onclick=closeSheet;
+ const pc=$('#pcopy');if(pc)pc.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText($('#pmsg').textContent).then(()=>pc.textContent='Copied ✓',()=>pc.textContent='Select the text and copy it')};
+
+ $('#ua').onclick=()=>{S.all=!S.all;save();closeSheet();render()};
+ $('#rs').onclick=()=>{S.done=0;S.all=false;save();location.reload()};
+}
+function closeSheet(){$('#sheet').classList.remove('on');if(location.hash==='#teacher')history.replaceState(null,'',location.pathname+location.search)}
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+const hashT=()=>{if(location.hash==='#teacher')openSheet()};addEventListener('hashchange',hashT);setTimeout(hashT,0);
+
+/* ---------- render ---------- */
+const nav=$('#nav'),nx=$('#next'),bk=$('#back');
+function unlocked(i){return S.all||i<=S.done}
+function render(){
+ if(cleanup){cleanup();cleanup=null}
+ $$('#lang button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.l===S.lang)));
+ const m=$('#main');
+ if(!S.lang){nav.style.display='none';
+  m.innerHTML=`<div class="card" style="text-align:center"><svg class="star" viewBox="0 0 150 150" aria-hidden="true"><rect x="40" y="30" width="70" height="100" rx="10" fill="#dff1fb" stroke="#6b8899" stroke-width="5"/><rect x="44" y="66" width="62" height="60" rx="6" fill="#8cc8ea"/><rect x="58" y="104" width="10" height="10" fill="#fff" stroke="#4b2160" stroke-width="2"/><rect x="72" y="108" width="10" height="10" fill="#fff" stroke="#4b2160" stroke-width="2"/><rect x="66" y="94" width="10" height="10" fill="#fff" stroke="#4b2160" stroke-width="2"/><circle cx="60" cy="84" r="4" fill="#fff"/><circle cx="90" cy="78" r="3" fill="#fff"/></svg>
+   <h1>Material Changes<br><span style="font-size:.7em">मटीरियल चेंजेस</span></h1><p class="big">Choose your language · अपनी भाषा चुनो</p>
+   <div class="langpick"><button data-pl="hi">हिंदी</button><button data-pl="en">English</button><button data-pl="both">दोनों · Both</button></div></div>`;
+  m.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{S.lang=b.dataset.pl;save();render()});return}
+ if(S.name===undefined){nav.style.display='none';m.innerHTML=`<div class="card"><h2>${L('What is your name?','तुम्हारा नाम क्या है?')}</h2><p>${L('Your teacher will see it when you send your answers.','जवाब भेजने पर टीचर को तुम्हारा नाम दिखेगा।')}</p><input class="namein" id="nm" maxlength="30" autocomplete="given-name"><button class="go" id="nmok">${L('Continue','आगे चलो')}</button><button class="tbtn" id="nmskip" style="width:100%;margin-top:10px">${L('Skip','छोड़ो')}</button></div>`;$('#nmok').onclick=()=>{S.name=$('#nm').value.trim();save();render()};$('#nmskip').onclick=()=>{S.name='';save();render()};return}
+ if(view.x){renderX(m);return}
+ if(view.n!==undefined){nav.style.display='block';renderNotes(m);return}
+ if(view.s<0){ // map
+  nav.style.display='none';
+  const all=S.done>=ST.length;
+  m.innerHTML=`<div class="tiles"><button class="tile n" data-act="note:-1"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 10q9-4 18 2v28q-9-6-18-2z" fill="#ffc83d"/><path d="M42 10q-9-4-18 2v28q9-6 18-2z" fill="#fff"/></svg>${L('Notes','नोट्स')}<small>${L('Read and play with pictures','पढ़ो और चित्रों से खेलो')}</small></button><button class="tile a" data-act="start"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#d93a26"/><path d="M19 15l14 9-14 9z" fill="#fff"/></svg>${L('Activities','एक्टिविटीज़')}<small>${L(S.done>=ST.length?'All done — play again':'Continue step '+(S.done+1),S.done>=ST.length?'सब पूरा — फिर खेलो':'स्टेप '+(S.done+1)+' जारी रखो')}</small></button><button class="tile wide" data-act="xlab"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 4h12v4h-2v12l12 20q2 4-2 4H10q-4 0-2-4l12-20V8h-2z" fill="#dff1fb" stroke="#ffe7a8" stroke-width="2"/><path d="M12 36h24l3 5q1 2-1 2H10q-2 0-1-2z" fill="#d93a26"/><circle cx="22" cy="30" r="2" fill="#d93a26"/></svg><span>${L('Experiments','प्रयोग')}<small>${L('What would happen if…? Think like a scientist','अगर ऐसा हो तो क्या होगा…? वैज्ञानिक की तरह सोचो')}</small></span></button></div><h1 style="margin-top:6px">${L('Your science journey','तुम्हारी साइंस यात्रा')}</h1><p class="big">${all?L('You finished every step! You are a Material Changes Explorer.','तुमने हर स्टेप पूरा किया! तुम मटीरियल चेंजेस एक्सप्लोरर हो।'):L('Finish one step to unlock the next.','एक स्टेप पूरा करो, अगला खुलेगा।')}</p>
+  <ol class="map">${ST.map((s,i)=>{const d=i<S.done,u=unlocked(i),now=i===S.done&&!all;return `<li><button class="stone ${d?'done':u?'':'locked'} ${now?'now':''}" data-s="${i}" ${u?'':'aria-disabled="true"'}><span class="n">${d?'✓':u?i+1:LOCK}</span><span><span class="t">${LA(s.t)}</span><small>${u?LA(s.sub):L('Locked','बंद है')}</small></span></button></li>`}).join('')}</ol>`;
+  m.querySelectorAll('.stone').forEach(b=>b.onclick=()=>{const i=+b.dataset.s;if(!unlocked(i))return;view={s:i,p:0};render();scrollTo(0,0)});
+  return}
+ const s=ST[view.s],pg=s.pages[view.p],key=view.s+'-'+view.p;
+ nav.style.display='block';
+ m.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px"><div class="count">${L(`Step ${view.s+1} of ${ST.length}`,`स्टेप ${view.s+1} / ${ST.length}`)}</div><div class="count">${view.p+1} / ${s.pages.length}</div></div><h2 style="margin-top:2px">${LA(s.t)}</h2>${pg.html()}${view.p===0&&NMAP[view.s]!==undefined?`<button class="tbtn readmore" data-act="note:${NMAP[view.s]}">${L('Read more in the Notes →','नोट्स में और पढ़ो →')}</button>`:''}`;
+ const ok=()=>{pageOk[key]=1;setNext()};
+ if(pg.auto||view.s<S.done)pageOk[key]=pageOk[key]||(pg.auto?1:0);
+ if(pg.mount)cleanup=pg.mount(ok)||null;
+ setNext();
+}
+function setNext(){
+ const s=ST[view.s],key=view.s+'-'+view.p,okay=!!pageOk[key]||view.s<S.done,last=view.p===s.pages.length-1;
+ nx.disabled=!okay;
+ nx.innerHTML=okay?(last?L('Finish step ✓','स्टेप पूरा ✓'):L('Next →','आगे →')):`${L('Next →','आगे →')}<span class="hint">${L('finish the activity first','पहले एक्टिविटी पूरी करो')}</span>`;
+}
+nx.addEventListener('click',()=>{
+ if(view.x){xNext();return}
+ if(view.n!==undefined){view.n=view.n<NOTES.length-1?view.n+1:-1;render();scrollTo(0,0);return}
+ const s=ST[view.s];if(nx.disabled)return;
+ if(view.p<s.pages.length-1){view.p++;render();scrollTo(0,0);return}
+ if(view.s>=S.done){S.done=view.s+1;save()}
+ celebrate();
+});
+bk.addEventListener('click',()=>{if(view.x){xBack();return}if(view.n!==undefined){view=view.n>=0?{s:-1,p:0,n:-1}:{s:-1,p:0};render();scrollTo(0,0);return}if(view.p>0){view.p--;render()}else{view={s:-1,p:0};render()}scrollTo(0,0)});
+function celebrate(){
+ if(cleanup){cleanup();cleanup=null}
+ nav.style.display='none';const n=view.s,last=n===ST.length-1;
+ $('#main').innerHTML=`<div class="card" style="text-align:center"><svg class="star" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l12.6 27.4 29.9 3.3-22.3 20.2 6.2 29.5L50 71.5 23.6 86.4l6.2-29.5L7.5 36.7l29.9-3.3z" fill="#ffc83d" stroke="#d93a26" stroke-width="4" stroke-linejoin="round"/></svg>
+ <h1>${L('Step done!','स्टेप पूरा!')}</h1><p class="big">${last?L('You finished the whole chapter. Super scientist!','तुमने पूरा चैप्टर पूरा किया। सुपर साइंटिस्ट!'):L(`You unlocked step ${n+2}: <b>${ST[n+1].t[0]}</b>`,`स्टेप ${n+2} खुल गया: <b>${ST[n+1].t[1]}</b>`)}</p>
+ <button class="go" id="tomap">${L('Back to my journey','मेरी यात्रा पर वापस')}</button></div>`;
+ $('#tomap').onclick=()=>{view={s:-1,p:0};render();scrollTo(0,0)};
+}
+$$('#lang button').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.l;save();if(view.s>=0&&ST[view.s].pages[view.p].mount){const st=ST[view.s].pages[view.p];render()}else render()}));
+$('#home').addEventListener('click',()=>{view={s:-1,p:0};render();scrollTo(0,0)});
+render();
+}
+</script>
+</body>
+</html>
